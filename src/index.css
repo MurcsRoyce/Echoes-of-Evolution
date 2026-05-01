@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+
+:root {
+  font-family: 'Crimson Pro', Georgia, serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Default (dark) theme */
+  --app-bg: #0a0f14;
+  --app-text: #e0d8c8;
+  --app-header-bg: linear-gradient(180deg, rgba(20, 30, 45, 0.9) 0%, transparent 100%);
+  --app-header-border: rgba(212, 175, 55, 0.25);
+  --app-accent: #c9a227;
+  --app-accent-muted: #8b7355;
+  --app-accent-border: rgba(212, 175, 55, 0.5);
+  --app-accent-border-hover: rgba(212, 175, 55, 0.8);
+  --app-btn-bg: linear-gradient(180deg, #2a3547 0%, #1a2235 100%);
+  --app-btn-bg-hover: linear-gradient(180deg, #3a4560 0%, #2a3547 100%);
+  --app-muted: rgba(200, 190, 160, 0.7);
+  --app-title-gradient: linear-gradient(135deg, #d4af37 0%, #8b7355 50%, #c9a227 100%);
+}
+
+[data-theme="bright"] {
+  --app-bg: #e8e4dc;
+  --app-text: #2a2520;
+  --app-header-bg: linear-gradient(180deg, rgba(245, 240, 232, 0.98) 0%, rgba(232, 224, 208, 0.98) 100%);
+  --app-header-border: rgba(120, 90, 50, 0.35);
+  --app-accent: #7a5a1f;
+  --app-accent-muted: #5c4520;
+  --app-accent-border: rgba(120, 90, 50, 0.55);
+  --app-accent-border-hover: rgba(120, 90, 50, 0.85);
+  --app-btn-bg: linear-gradient(180deg, #d4c8b8 0%, #c4b8a8 100%);
+  --app-btn-bg-hover: linear-gradient(180deg, #e4dcc8 0%, #d4c8b8 100%);
+  --app-muted: rgba(60, 50, 40, 0.75);
+  --app-title-gradient: linear-gradient(135deg, #7a5a1f 0%, #5c4520 50%, #8b6914 100%);
+}
+
+:root {
+  color: var(--app-text);
+  background-color: var(--app-bg);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}

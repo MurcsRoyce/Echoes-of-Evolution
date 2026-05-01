@@ -1,0 +1,542 @@
+[
+  {
+    "id": "apprentice",
+    "name": "Apprentice",
+    "abilityName": "Sketch",
+    "abilityText": "When this character enters play, look at the top card of your deck. You may put it on the bottom."
+  },
+  {
+    "id": "street-artist",
+    "name": "Street Artist",
+    "abilityName": "Graffiti",
+    "abilityText": "When this character attacks, it cannot be targeted by abilities next turn."
+  },
+  {
+    "id": "painter",
+    "name": "Painter",
+    "abilityName": "Masterpiece",
+    "abilityText": "Once per turn, you may pay 1 evolution point to give another character +1 power and +1 health until end of turn."
+  },
+  {
+    "id": "sculptor",
+    "name": "Sculptor",
+    "abilityName": "Monument",
+    "abilityText": "Friendly characters adjacent to this one cost 1 less evolution point to evolve."
+  },
+  {
+    "id": "visionary",
+    "name": "Visionary",
+    "abilityName": "Inspiration",
+    "abilityText": "When you evolve a character, gain 1 evolution point and draw 1 card."
+  },
+  {
+    "id": "illusionist",
+    "name": "Illusionist",
+    "abilityName": "Mirage",
+    "abilityText": "When an opponent attacks, you may discard 1 card to cancel that attack."
+  },
+  {
+    "id": "teller",
+    "name": "Teller",
+    "abilityName": "Deposit",
+    "abilityText": "When this character enters play, gain 1 evolution point."
+  },
+  {
+    "id": "analyst",
+    "name": "Analyst",
+    "abilityName": "Forecast",
+    "abilityText": "At the start of your turn, if you have 5+ evolution points, draw 1 card."
+  },
+  {
+    "id": "loan-officer",
+    "name": "Loan Officer",
+    "abilityName": "Credit",
+    "abilityText": "Once per turn, you may spend 2 evolution points to draw 2 cards."
+  },
+  {
+    "id": "investment-banker",
+    "name": "Investment Banker",
+    "abilityName": "Leverage",
+    "abilityText": "When you gain evolution points (except start of turn), gain 1 more."
+  },
+  {
+    "id": "branch-manager",
+    "name": "Branch Manager",
+    "abilityName": "Interest",
+    "abilityText": "At the end of your turn, if you have 10+ evolution points, gain 2."
+  },
+  {
+    "id": "chief-financial-officer",
+    "name": "Chief Financial Officer",
+    "abilityName": "Capital",
+    "abilityText": "Your evolution point maximum is 25. When you would gain EP at max, draw 1 card instead."
+  },
+  {
+    "id": "medical-intern",
+    "name": "Medical Intern",
+    "abilityName": "First Aid",
+    "abilityText": "At end of your turn, heal 1 HP to any character."
+  },
+  {
+    "id": "general-practitioner",
+    "name": "General Practitioner",
+    "abilityName": "Routine Care",
+    "abilityText": "When this character enters play, heal 2 HP."
+  },
+  {
+    "id": "emergency-doctor",
+    "name": "Emergency Doctor",
+    "abilityName": "Rapid Response",
+    "abilityText": "Once per turn, when a character would be defeated, prevent it and reduce its HP to 1 instead."
+  },
+  {
+    "id": "field-medic",
+    "name": "Field Medic",
+    "abilityName": "Combat Triage",
+    "abilityText": "Whenever a character takes damage, heal 1 HP to it."
+  },
+  {
+    "id": "clinical-specialist",
+    "name": "Clinical Specialist",
+    "abilityName": "Targeted Treatment",
+    "abilityText": "Choose a character. It gains +2 HP and Regenerate this turn."
+  },
+  {
+    "id": "senior-physician",
+    "name": "Senior Physician",
+    "abilityName": "Medical Authority",
+    "abilityText": "Your healing effects heal +1 additional HP."
+  },
+  {
+    "id": "apprentice-engineer",
+    "name": "Apprentice Engineer",
+    "abilityName": "Measure Twice",
+    "abilityText": "When this character enters play, look at the top 2 cards of your deck. You may put any number of them on the bottom."
+  },
+  {
+    "id": "field-technician",
+    "name": "Field Technician",
+    "abilityName": "Patch Job",
+    "abilityText": "At the end of your turn, you may heal 1 HP to a structure or machine character."
+  },
+  {
+    "id": "civil-engineer",
+    "name": "Civil Engineer",
+    "abilityName": "Reinforce",
+    "abilityText": "When this character enters play, give another friendly character +2 HP this turn."
+  },
+  {
+    "id": "mechanical-engineer",
+    "name": "Mechanical Engineer",
+    "abilityName": "Overclock",
+    "abilityText": "Once per turn, you may pay 1 evolution point: a friendly character gains +1 Power this turn."
+  },
+  {
+    "id": "systems-architect",
+    "name": "Systems Architect",
+    "abilityName": "Networked Design",
+    "abilityText": "Your other Engineer characters cost 1 less evolution point to play (minimum 1)."
+  },
+  {
+    "id": "chief-engineer",
+    "name": "Chief Engineer",
+    "abilityName": "Redesign the Blueprint",
+    "abilityText": "When this character enters play, draw 1 card. Then you may discard 1 card to gain +2 evolution points."
+  },
+  {
+    "id": "founder",
+    "name": "Founder",
+    "abilityName": "Seed Funding",
+    "abilityText": "When this character enters play, gain 2 evolution points."
+  },
+  {
+    "id": "freelancer",
+    "name": "Freethinker",
+    "abilityName": "Gig Economy",
+    "abilityText": "When you play an economy card, this character gains +1 power until end of turn."
+  },
+  {
+    "id": "innovator",
+    "name": "Innovator",
+    "abilityName": "Pivot",
+    "abilityText": "Once per turn, you may discard 1 card to gain 1 evolution point and draw 1 card."
+  },
+  {
+    "id": "venture-capitalist",
+    "name": "Venture Capitalist",
+    "abilityName": "Series A",
+    "abilityText": "When a character you control evolves, gain 2 evolution points."
+  },
+  {
+    "id": "ceo",
+    "name": "CEO",
+    "abilityName": "Scale Up",
+    "abilityText": "At the end of your turn, if you have an economy card in play, draw 1 card."
+  },
+  {
+    "id": "industry-titan",
+    "name": "Industry Titan",
+    "abilityName": "Acquisition",
+    "abilityText": "When this character enters play, you may destroy an opponent\\"
+  },
+  {
+    "id": "village-farmhand",
+    "name": "Village Farmhand",
+    "abilityName": "Early Harvest",
+    "abilityText": "When this character enters play, gain 1 evolution point."
+  },
+  {
+    "id": "community-gardener",
+    "name": "Community Gardener",
+    "abilityName": "Share the Yield",
+    "abilityText": "At the end of your turn, you may heal 1 HP to another friendly character."
+  },
+  {
+    "id": "irrigation-planner",
+    "name": "Irrigation Planner",
+    "abilityName": "Channel Resources",
+    "abilityText": "Once per turn, you may pay 1 evolution point: another friendly character gains +1 Energy this turn."
+  },
+  {
+    "id": "soil-conservationist",
+    "name": "Soil Conservationist",
+    "abilityName": "Protect the Ground",
+    "abilityText": "Whenever a friendly character would take 2 or more damage at once, prevent 1 of that damage."
+  },
+  {
+    "id": "agro-innovator",
+    "name": "Agro Innovator",
+    "abilityName": "Expanded Fields",
+    "abilityText": "When this character enters play, gain 2 evolution points if you control another Farmer character."
+  },
+  {
+    "id": "regional-steward",
+    "name": "Regional Steward",
+    "abilityName": "Secure the Harvest",
+    "abilityText": "At the end of your turn, if you gained evolution points this turn, heal 2 HP to your leader."
+  },
+  {
+    "id": "blogger",
+    "name": "Blogger",
+    "abilityName": "Gossip",
+    "abilityText": "When this character enters play, look at a random card in your opponent\\"
+  },
+  {
+    "id": "reporter",
+    "name": "Reporter",
+    "abilityName": "Interview",
+    "abilityText": "When this character is defeated, draw 1 card."
+  },
+  {
+    "id": "investigator",
+    "name": "Investigator",
+    "abilityName": "Expose",
+    "abilityText": "When this character enters play, reveal target opponent\\"
+  },
+  {
+    "id": "anchor",
+    "name": "News Anchor",
+    "abilityName": "Broadcast",
+    "abilityText": "At the start of your turn, if you have fewer cards in hand than your opponent, draw 1 card."
+  },
+  {
+    "id": "editor-in-chief",
+    "name": "Editor-in-Chief",
+    "abilityName": "Censorship",
+    "abilityText": "Once per turn, you may pay 2 evolution points to negate an opponent\\"
+  },
+  {
+    "id": "whistleblower",
+    "name": "Whistleblower",
+    "abilityName": "Leak",
+    "abilityText": "When this character enters play, force the opponent to discard 1 random card. You gain 2 evolution points."
+  },
+  {
+    "id": "paralegal",
+    "name": "Paralegal",
+    "abilityName": "Research",
+    "abilityText": "When this character enters play, look at the top 2 cards of your deck. Put one into your hand."
+  },
+  {
+    "id": "public-defender",
+    "name": "Public Defender",
+    "abilityName": "Defense",
+    "abilityText": "When a friendly character would be defeated, you may discard 1 card to prevent it once."
+  },
+  {
+    "id": "prosecutor",
+    "name": "Prosecutor",
+    "abilityName": "Cross-Examine",
+    "abilityText": "When this character enters play, deal 1 damage to target opponent character."
+  },
+  {
+    "id": "corporate-lawyer",
+    "name": "Corporate Lawyer",
+    "abilityName": "Contract",
+    "abilityText": "At the end of your turn, gain 1 evolution point if you control another Lawyer."
+  },
+  {
+    "id": "trial-attorney",
+    "name": "Trial Attorney",
+    "abilityName": "Closing Argument",
+    "abilityText": "When this character attacks or is used to deal damage, deal 1 additional damage."
+  },
+  {
+    "id": "judge",
+    "name": "Judge",
+    "abilityName": "Ruling",
+    "abilityText": "Once per turn, you may pay 2 evolution points: draw 2 cards."
+  },
+  {
+    "id": "peddler",
+    "name": "Peddler",
+    "abilityName": "Haggle",
+    "abilityText": "When this character enters play, draw 1 card."
+  },
+  {
+    "id": "trader",
+    "name": "Trader",
+    "abilityName": "Barter",
+    "abilityText": "When you play an economy card, gain 1 evolution point."
+  },
+  {
+    "id": "shopkeeper",
+    "name": "Shopkeeper",
+    "abilityName": "Inventory",
+    "abilityText": "Once per turn, you may pay 1 evolution point to draw 1 card."
+  },
+  {
+    "id": "caravan-leader",
+    "name": "Caravan Leader",
+    "abilityName": "Trade Route",
+    "abilityText": "At the start of your turn, if you have 2+ Merchants, gain 1 evolution point."
+  },
+  {
+    "id": "guild-master",
+    "name": "Guild Master",
+    "abilityName": "Monopoly",
+    "abilityText": "When you play a card, you may refund 1 of its evolution cost."
+  },
+  {
+    "id": "merchant-prince",
+    "name": "Merchant Prince",
+    "abilityName": "Wealth",
+    "abilityText": "At the end of your turn, gain 1 evolution point for each economy card you control."
+  },
+  {
+    "id": "rookie",
+    "name": "Rookie",
+    "abilityName": "Patrol",
+    "abilityText": "When this character defends, it gains +1 health."
+  },
+  {
+    "id": "beat-cop",
+    "name": "Beat Cop",
+    "abilityName": "Backup",
+    "abilityText": "When you play another Police Officer, this character gains +1 power this turn."
+  },
+  {
+    "id": "detective",
+    "name": "Detective",
+    "abilityName": "Investigate",
+    "abilityText": "When this character enters play, look at the top 3 cards of your deck. Put them back in any order."
+  },
+  {
+    "id": "sergeant-police",
+    "name": "Sergeant",
+    "abilityName": "Barricade",
+    "abilityText": "Opponent characters cannot attack your other characters with lower health than this one."
+  },
+  {
+    "id": "swat",
+    "name": "SWAT Specialist",
+    "abilityName": "Breach",
+    "abilityText": "When this character attacks, ignore the target\\"
+  },
+  {
+    "id": "police-chief",
+    "name": "Police Chief",
+    "abilityName": "Lockdown",
+    "abilityText": "Once per turn, you may pay 2 evolution points to prevent target character from attacking next turn."
+  },
+  {
+    "id": "campaign-staff",
+    "name": "Campaign Staff",
+    "abilityName": "Canvass",
+    "abilityText": "When this character enters play, look at the top 2 cards of your deck. Put one in your hand and discard the other."
+  },
+  {
+    "id": "local-representative",
+    "name": "Local Representative",
+    "abilityName": "Filibuster",
+    "abilityText": "While this character is in play, your opponent\\"
+  },
+  {
+    "id": "mayor",
+    "name": "Mayor",
+    "abilityName": "Legislation",
+    "abilityText": "Once per turn, you may pay 1 evolution point. If you do, choose a character; it cannot attack next turn."
+  },
+  {
+    "id": "senator",
+    "name": "Senator",
+    "abilityName": "Veto",
+    "abilityText": "When your opponent plays a card, you may discard 1 card to counter its \"enter play\" ability."
+  },
+  {
+    "id": "governor",
+    "name": "Governor",
+    "abilityName": "Executive Order",
+    "abilityText": "At the start of your turn, gain 1 evolution point for each character you control."
+  },
+  {
+    "id": "president",
+    "name": "President",
+    "abilityName": "State of the Union",
+    "abilityText": "When this character evolves, all your other characters gain +1 power and +1 health."
+  },
+  {
+    "id": "lab-assistant",
+    "name": "Lab Assistant",
+    "abilityName": "Notebook",
+    "abilityText": "When this character enters play, draw 1 card."
+  },
+  {
+    "id": "researcher",
+    "name": "Researcher",
+    "abilityName": "Hypothesis",
+    "abilityText": "When you evolve, draw 1 card."
+  },
+  {
+    "id": "postdoc",
+    "name": "Postdoc",
+    "abilityName": "Experiment",
+    "abilityText": "Once per turn, you may discard 1 card to draw 1 card."
+  },
+  {
+    "id": "principal-investigator",
+    "name": "Principal Investigator",
+    "abilityName": "Grant",
+    "abilityText": "The first time you evolve each turn, it costs 1 less evolution point."
+  },
+  {
+    "id": "professor",
+    "name": "Professor",
+    "abilityName": "Peer Review",
+    "abilityText": "When a character you control evolves, draw 2 cards."
+  },
+  {
+    "id": "nobel-laureate",
+    "name": "Nobel Laureate",
+    "abilityName": "Breakthrough",
+    "abilityText": "When this character enters play or evolves, draw 3 cards."
+  },
+  {
+    "id": "recruit",
+    "name": "Recruit",
+    "abilityName": "Drill",
+    "abilityText": "When this character attacks, it has +1 power this turn."
+  },
+  {
+    "id": "infantry",
+    "name": "Infantry",
+    "abilityName": "Advance",
+    "abilityText": "When this character enters play, deal 1 damage to the opponent."
+  },
+  {
+    "id": "sergeant",
+    "name": "Sergeant",
+    "abilityName": "Rally",
+    "abilityText": "When you attack with 2+ Soldiers, deal 1 additional damage."
+  },
+  {
+    "id": "medic",
+    "name": "Combat Medic",
+    "abilityName": "Triage",
+    "abilityText": "When a friendly Soldier would be defeated, you may pay 1 evolution point to prevent it once."
+  },
+  {
+    "id": "captain",
+    "name": "Captain",
+    "abilityName": "Assault",
+    "abilityText": "When this character attacks, all friendly Soldiers have +1 power until end of turn."
+  },
+  {
+    "id": "veteran",
+    "name": "Veteran",
+    "abilityName": "Veterancy",
+    "abilityText": "This character can attack twice per turn. (Still only one attack phase.)"
+  },
+  {
+    "id": "student-teacher",
+    "name": "Student Teacher",
+    "abilityName": "Lesson Plan",
+    "abilityText": "When this character enters play, draw 1 card."
+  },
+  {
+    "id": "substitute-teacher",
+    "name": "Substitute Teacher",
+    "abilityName": "Fill In",
+    "abilityText": "At the end of your turn, you may give another friendly character +1 Power until end of turn."
+  },
+  {
+    "id": "department-head",
+    "name": "Department Head",
+    "abilityName": "Curriculum",
+    "abilityText": "When this character enters play, draw a card for each other Teacher you control."
+  },
+  {
+    "id": "guidance-counselor",
+    "name": "Guidance Counselor",
+    "abilityName": "Mentor",
+    "abilityText": "Once per turn, when a friendly character would take damage, you may prevent 1 of it."
+  },
+  {
+    "id": "professor",
+    "name": "Professor",
+    "abilityName": "Tenure",
+    "abilityText": "Your other Teacher characters have +1 Health."
+  },
+  {
+    "id": "principal",
+    "name": "Principal",
+    "abilityName": "Authority",
+    "abilityText": "When this character enters play, draw 2 cards and gain 1 evolution point."
+  },
+  {
+    "id": "laborer",
+    "name": "Laborer",
+    "abilityName": "Overtime",
+    "abilityText": "When this character enters play, gain 1 evolution point."
+  },
+  {
+    "id": "craftsperson",
+    "name": "Craftsperson",
+    "abilityName": "Craft",
+    "abilityText": "When you play another Worker, gain 1 evolution point."
+  },
+  {
+    "id": "foreman",
+    "name": "Foreman",
+    "abilityName": "Supervise",
+    "abilityText": "Other Workers you control have +1 power."
+  },
+  {
+    "id": "mechanic",
+    "name": "Mechanic",
+    "abilityName": "Repair",
+    "abilityText": "When this character survives damage, gain 1 evolution point."
+  },
+  {
+    "id": "foreman-elite",
+    "name": "Senior Foreman",
+    "abilityName": "Efficiency",
+    "abilityText": "At the start of your turn, if you control 2+ Workers, gain 1 evolution point."
+  },
+  {
+    "id": "master-craftsperson",
+    "name": "Master Craftsperson",
+    "abilityName": "Legacy",
+    "abilityText": "When this character evolves or is used in evolution, draw 1 card."
+  }
+]

@@ -1,0 +1,77 @@
+.dice-tracks {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+  padding: 12px 20px;
+  background: linear-gradient(180deg, rgba(15, 22, 35, 0.95) 0%, rgba(8, 12, 18, 0.98) 100%);
+  border: 2px solid rgba(212, 175, 55, 0.35);
+  border-radius: 12px;
+}
+
+.dice-tracks__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+}
+
+.dice-tracks__side-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(229, 231, 235, 0.9);
+  min-width: 4.5em;
+}
+
+.dice-tracks__side-label--opponent {
+  color: rgba(248, 113, 113, 0.95);
+}
+
+.dice-tracks__stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dice-tracks__icon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.dice-tracks__stat--health .dice-tracks__icon,
+.dice-tracks__stat--health .dice-tracks__value {
+  color: #e53935;
+}
+
+.dice-tracks__stat--ep .dice-tracks__icon,
+.dice-tracks__stat--ep .dice-tracks__value {
+  color: #1e88e5;
+}
+
+.dice-tracks__stat--shield .dice-tracks__icon,
+.dice-tracks__stat--shield .dice-tracks__value {
+  color: #7cb342;
+}
+
+.dice-tracks__row--opponent .dice-tracks__stat--shield .dice-tracks__icon,
+.dice-tracks__row--opponent .dice-tracks__stat--shield .dice-tracks__value {
+  color: #9ccc65;
+}
+
+.dice-tracks__row--opponent .dice-tracks__stat--health .dice-tracks__icon,
+.dice-tracks__row--opponent .dice-tracks__stat--health .dice-tracks__value {
+  color: #f44336;
+}
+
+.dice-tracks__row--opponent .dice-tracks__stat--ep .dice-tracks__icon,
+.dice-tracks__row--opponent .dice-tracks__stat--ep .dice-tracks__value {
+  color: #42a5f5;
+}
+
+.dice-tracks__value {
+  font-size: 1.45rem;
+  font-weight: 700;
+}

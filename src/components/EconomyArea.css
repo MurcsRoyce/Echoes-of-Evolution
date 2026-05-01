@@ -1,0 +1,90 @@
+/* Match EvolutionArea colors: same panel and label styling */
+.economy-area {
+  padding: 12px 20px;
+  background: linear-gradient(180deg, rgba(15, 22, 35, 0.95) 0%, rgba(8, 12, 18, 0.98) 100%);
+  border: 2px solid rgba(212, 175, 55, 0.35);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
+}
+
+.economy-area__label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: rgba(140, 220, 160, 1);
+  margin-bottom: 6px;
+  flex-shrink: 0;
+  text-align: center;
+  width: 100%;
+}
+
+.economy-area__hint {
+  font-size: 0.7rem;
+  color: rgba(200, 190, 160, 0.65);
+  margin: 0 0 10px;
+  flex-shrink: 0;
+}
+
+.economy-area__slots {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+.economy-area__slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.economy-area__card-wrap {
+  margin: 0;
+  width: 1.8in;
+  min-height: 2.6in;
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.economy-area__card-wrap:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.economy-area__card-wrap[role="button"] {
+  cursor: pointer;
+}
+
+.economy-area__card-wrap--selected {
+  box-shadow: 0 0 0 3px rgba(100, 180, 120, 0.9);
+  border-radius: 10px;
+}
+
+/* Empty slot: same size as evolution Target/Burn (2.5in × 3.5in), distinct economy color */
+.economy-area__empty {
+  width: 1.8in;
+  min-height: 2.6in;
+  border: 2px dashed rgba(100, 180, 120, 0.5);
+  border-radius: 10px;
+  background: rgba(20, 40, 30, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+}
+
+.economy-area__empty-text {
+  font-size: 0.85rem;
+  color: rgba(140, 220, 160, 0.9);
+}

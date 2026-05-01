@@ -1,0 +1,57 @@
+.occupation-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.occupation-modal__panel {
+  position: relative;
+  padding: 20px;
+  padding-top: 48px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: linear-gradient(180deg, rgba(15, 22, 35, 0.98) 0%, rgba(8, 12, 18, 0.98) 100%);
+  border: 2px solid rgba(212, 175, 55, 0.5);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  max-width: 1200px;
+  width: 100%;
+}
+
+.occupation-modal__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(35, 45, 65, 0.8);
+  color: #e8e0c8;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.2s;
+}
+
+.occupation-modal__close:hover {
+  background: rgba(50, 60, 80, 0.9);
+}
+
+.occupation-modal__content {
+  min-height: 80px;
+}
+
+.occupation-modal__empty {
+  color: rgba(200, 190, 160, 0.6);
+  margin: 0;
+}

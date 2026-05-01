@@ -1,0 +1,43 @@
+.hand {
+  padding: 12px 20px;
+  background: linear-gradient(180deg, rgba(15, 22, 35, 0.95) 0%, rgba(8, 12, 18, 0.98) 100%);
+  border-top: 2px solid rgba(212, 175, 55, 0.35);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4);
+}
+
+.hand__label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: rgba(212, 175, 55, 0.8);
+  margin-bottom: 10px;
+}
+
+.hand__cards {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  min-height: 220px;
+}
+
+.hand--disabled {
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.hand__card-wrap {
+  cursor: pointer;
+  border-radius: 10px;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.hand__card-wrap:hover {
+  transform: translateY(-4px);
+}
+
+.hand__card-wrap--selected {
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.8);
+}
+

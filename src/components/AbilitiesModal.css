@@ -1,0 +1,153 @@
+.abilities-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 6, 16, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+}
+
+.abilities-modal__panel {
+  width: min(900px, 95vw);
+  max-height: min(650px, 90vh);
+  background: radial-gradient(circle at top, #1b2235 0%, #050711 60%);
+  border-radius: 12px;
+  box-shadow:
+    0 18px 45px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+  padding: 16px 18px 18px;
+  display: flex;
+  flex-direction: column;
+}
+
+.abilities-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.abilities-modal__title {
+  margin: 0;
+  font-size: 1.25rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #e5e9f5;
+}
+
+.abilities-modal__close {
+  border: none;
+  background: transparent;
+  color: #a0aec0;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.abilities-modal__close:hover {
+  color: #edf2f7;
+}
+
+.abilities-modal__legend {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 0.75rem;
+}
+
+.abilities-modal__legend-chip {
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.9);
+}
+
+.abilities-modal__legend-chip--basic {
+  border-color: rgba(229, 57, 53, 0.7);
+  color: #fecaca;
+}
+
+.abilities-modal__legend-chip--advanced {
+  border-color: rgba(30, 136, 229, 0.7);
+  color: #bfdbfe;
+}
+
+.abilities-modal__legend-chip--rare {
+  border-color: rgba(253, 216, 53, 0.85);
+  color: #fef9c3;
+}
+
+.abilities-modal__content {
+  flex: 1;
+  overflow-y: auto;
+  margin-top: 2px;
+  padding-right: 4px;
+}
+
+.abilities-modal__row {
+  border-radius: 8px;
+  padding: 6px 8px;
+  margin-bottom: 4px;
+  display: flex;
+  flex-direction: column;
+}
+
+.abilities-modal__row--basic {
+  background: rgba(127, 29, 29, 0.15);
+  border: 1px solid rgba(229, 57, 53, 0.55);
+}
+
+.abilities-modal__row--advanced {
+  background: rgba(30, 64, 175, 0.18);
+  border: 1px solid rgba(30, 136, 229, 0.6);
+}
+
+.abilities-modal__row--rare {
+  background: rgba(161, 98, 7, 0.22);
+  border: 1px solid rgba(253, 216, 53, 0.8);
+}
+
+.abilities-modal__row-main {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.abilities-modal__name {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #e5e7eb;
+}
+
+.abilities-modal__occupation {
+  font-weight: 400;
+  font-size: 0.75rem;
+  color: rgba(209, 213, 219, 0.8);
+}
+
+.abilities-modal__rarity {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.85;
+}
+
+.abilities-modal__row-ability {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 0.78rem;
+}
+
+.abilities-modal__ability-name {
+  font-weight: 700;
+  color: #fefce8;
+}
+
+.abilities-modal__ability-text {
+  color: #e5e7eb;
+  opacity: 0.96;
+}
+

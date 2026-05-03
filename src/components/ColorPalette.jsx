@@ -9,6 +9,7 @@ export default function ColorPalette() {
           key={id}
           className="color-palette__swatch"
           title={name}
+          style={{ '--palette-rank-border': hex }}
         >
           <div className="color-palette__icon-wrap">
             <img

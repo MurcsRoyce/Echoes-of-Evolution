@@ -173,3 +173,23 @@ drop trigger if exists matchmaking_after_insert on public.matchmaking_queue;
 create trigger matchmaking_after_insert
   after insert on public.matchmaking_queue
   for each row execute function public.matchmaking_pair();
+
+-- Realtime: Join Match + game sync require these tables in supabase_realtime (safe to re-run).
+do $$
+begin
+  if exists (select 1 from pg_tables where schemaname = 'public' and tablename = 'matches')
+     and not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'matches'
+  ) then
+    alter publication supabase_realtime add table public.matches;
+  end if;
+
+  if exists (select 1 from pg_tables where schemaname = 'public' and tablename = 'match_game_state')
+     and not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'match_game_state'
+  ) then
+    alter publication supabase_realtime add table public.match_game_state;
+  end if;
+end $$;

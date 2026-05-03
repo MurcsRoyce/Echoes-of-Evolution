@@ -1,5 +1,11 @@
-import { useState, useEffect } from 'react';
-import { joinQueue, leaveQueue, subscribeToMatch, getQueueCount } from '../lib/matchmaking';
+import { useState, useEffect, useRef } from 'react';
+import {
+  joinQueue,
+  leaveQueue,
+  subscribeToMatch,
+  getQueueCount,
+  getCurrentMatch,
+} from '../lib/matchmaking';
 import { getCachedDisplayName } from '../lib/profileDisplayName';
 import './Lobby.css';
 
@@ -7,10 +13,13 @@ export default function Lobby({ onMatchFound, onStartTutorial }) {
   const [status, setStatus] = useState('idle'); // 'idle' | 'finding' | 'error'
   const [errorMessage, setErrorMessage] = useState(null);
   const [queueCount, setQueueCount] = useState(null);
+  const matchHandledRef = useRef(false);
 
   useEffect(() => {
     if (status !== 'finding') return;
     const unsubscribe = subscribeToMatch(({ matchId, playerSlot }) => {
+      if (matchHandledRef.current) return;
+      matchHandledRef.current = true;
       setStatus('idle');
       onMatchFound?.({ matchId, playerSlot });
     });
@@ -23,14 +32,21 @@ export default function Lobby({ onMatchFound, onStartTutorial }) {
     const poll = async () => {
       const count = await getQueueCount();
       if (!cancelled) setQueueCount(count);
+      const match = await getCurrentMatch();
+      if (!cancelled && match && !matchHandledRef.current) {
+        matchHandledRef.current = true;
+        setStatus('idle');
+        onMatchFound?.(match);
+      }
     };
     poll();
     const id = setInterval(poll, 2000);
     return () => { cancelled = true; clearInterval(id); };
-  }, [status]);
+  }, [status, onMatchFound]);
 
   const handleJoinMatch = async () => {
     setErrorMessage(null);
+    matchHandledRef.current = false;
     setStatus('finding');
     const result = await joinQueue(getCachedDisplayName() || null);
     if (!result.ok) {

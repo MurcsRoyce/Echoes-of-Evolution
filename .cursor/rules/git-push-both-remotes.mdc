@@ -1,0 +1,20 @@
+---
+description: After committing, push main to both GitHub remotes (echoes and origin).
+alwaysApply: true
+---
+
+# Push to both Git remotes
+
+This repo has two remotes that should stay in sync:
+
+- **echoes** → `https://github.com/MurcsRoyce/echoes.git` (upstream for `main`)
+- **origin** → `https://github.com/MurcsRoyce/Echoes-of-Evolution.git`
+
+Whenever you create a commit and the user wants changes on GitHub (or you finish work that should be published), run **both**:
+
+```bash
+git push echoes main
+git push origin main
+```
+
+If the branch name is not `main`, substitute the current branch. If a push fails (auth, network), report the error and do not claim both succeeded.

@@ -29,6 +29,7 @@ import RulesModal from './components/RulesModal';
 import AbilitiesModal from './components/AbilitiesModal';
 import EvolveModal from './components/EvolveModal';
 import DeckBuilderModal from './components/DeckBuilderModal';
+import FeedbackModal from './components/FeedbackModal';
 import CardSaveContextMenu from './components/CardSaveContextMenu';
 import ErrorBoundary from './components/ErrorBoundary';
 import { getCurrentMatch, leaveMatch, leaveQueue } from './lib/matchmaking';
@@ -218,6 +219,7 @@ export default function App() {
   const [rulesOpen, setRulesOpen] = useState(false);
   const [evolveOpen, setEvolveOpen] = useState(false);
   const [abilitiesOpen, setAbilitiesOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [deckBuilderOpen, setDeckBuilderOpen] = useState(false);
   const [cardSaveMenu, setCardSaveMenu] = useState(null);
 
@@ -1999,6 +2001,14 @@ export default function App() {
             <ColorPalette />
           </div>
           <div className="app__header-toolbar-right">
+            <button
+              type="button"
+              className="app__settings-btn"
+              onClick={() => setFeedbackOpen(true)}
+              aria-label="Send feedback"
+            >
+              Feedback
+            </button>
             <a
               className="app__settings-btn"
               href="https://discord.gg/UYTyvVxMTf"
@@ -2044,6 +2054,14 @@ export default function App() {
           onThemeChange={setTheme}
           soundMuted={soundMuted}
           onSoundMutedChange={setSoundMuted}
+        />
+      </ErrorBoundary>
+
+      <ErrorBoundary>
+        <FeedbackModal
+          isOpen={feedbackOpen}
+          onClose={() => setFeedbackOpen(false)}
+          defaultEmail={(session?.user?.email ?? '').trim()}
         />
       </ErrorBoundary>
 

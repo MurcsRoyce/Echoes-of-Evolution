@@ -64,7 +64,7 @@ export const TEACHER_DESIGN = {
       'Fill In',
       'At the end of your turn, you may give another friendly character +1 Power until end of turn.',
       null,
-      '/images/teacher/female/teacher_common__w.png'
+      '/images/teacher/female/teacher_common_w.png'
     ),
     character(
       'department-head',

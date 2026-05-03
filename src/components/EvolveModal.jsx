@@ -3,27 +3,29 @@ import './EvolveModal.css';
 
 const EVOLVE_TEXT = `## How Evolving Works
 
-Evolving combines two cards into one stronger **Evolved Form** card. You use two slots: **Target** and **Burn**.
+Evolving combines two cards into one stronger card. You use two slots: **Target** (first) and **Burn** (second). You can only combine **two occupations** or **two economy** cards — **not** a mix.
 
 ## The Two Slots
 
-- **Target (slot 1)**: The card whose **rarity** determines the evolved card's rank. This is the "base" card for the evolution.
-- **Burn (slot 2)**: The card you **sacrifice**. It is consumed and its stats are added to the Target's stats.
+- **Target (slot 1)**: The **base** for names, portrait, and **which ability is always kept**. Its stats are combined with the Burn’s.
+- **Burn (slot 2)**: **Sacrificed** when you evolve; its **power** and **health** are **added** to the Target’s.
 
-Putting a card into a slot **costs evolution points equal to that card's play cost** (each time you place it). You can take a card back out of a slot to your hand with no cost. Cards can come **from your hand or from your field** (already in play).
+Putting a card into a slot **costs evolution points equal to that card’s play cost**. If you control **Universal Education Grant**, the **first** slot placement each turn costs **1** fewer EP (that payment can reach **0**). You can remove a card from a slot before evolving: **the EP you paid is refunded**, and the card returns to **hand**, **field**, or **economy row** depending on where it came from. Cards can be placed from **hand**, **field**, or your **active economy row**.
 
 ## When Both Slots Are Filled
 
-Click **Evolve**. Both cards are removed and you receive **one new Evolved Form card** in your hand.
+Click **Evolve**. Both cards are removed and you receive **one** new card in your hand.
 
-## How Stats Get Increased
+## Occupations — stats and tier
 
-- **Power and Health**: The evolved card's **power** and **health** are the **sum** of the Target and Burn cards. So if Target has 2 Power and 3 Health, and Burn has 1 Power and 2 Health, the evolved card has **3 Power** and **5 Health**.
-- **Rarity (rank)**: The evolved card's rarity goes **one step up** from the **Target** only: Tier 1 → Tier 2, Tier 2 → Tier 3, Tier 3 stays Tier 3.
-- **Play cost**: **50%** chance the Burn card’s play cost is **added** to the Target’s, **50%** it is **subtracted**. The result is at least **1** Evolution to play.
-- **Ability**: The evolved card **always** keeps the **Target**'s ability. There is also a **50% chance** to **add** the **Burn** card's ability as a second one (shown below the Target's, with both ability names joined). If the two abilities are identical, nothing extra is added. The Burn card always contributes power and health.
+- **Power and Health**: **Sum** of Target and Burn (e.g. 2+1 Power → **3**, 3+2 Health → **5**).
+- **Tier (rarities)**: If **both** cards are **Tier 1**, the result is **Tier 2**. **Otherwise** the result is **Tier 3** (including Tier 2+Tier 2, Tier 3 mixes, etc.).
+- **Play cost**: **50%** chance the Burn’s play cost is **added** to the Target’s, **50%** **subtracted**. Result is at least **1** EP to play the evolved card.
+- **Ability**: The evolved card **always** keeps the **Target**’s ability. **50%** chance to **also** add the **Burn**’s ability (names joined with **·**). If both abilities are **identical**, nothing extra is added. The result also moves forward on the **evolution color** track (header palette).
 
-Evolving is how you turn weaker or duplicate cards into a single, stronger card for later turns.`;
+## Economy cards
+
+Two economy cards combine their **effect** text and use the same **50/50** play-cost add-or-subtract rule (minimum **1**).`;
 
 function formatContent(text) {
   const lines = text.split('\n');

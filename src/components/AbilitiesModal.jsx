@@ -1,42 +1,7 @@
 import { useMemo, useEffect } from 'react';
-import {
-  DOCTOR_DESIGN,
-  ENGINEER_DESIGN,
-  FARMER_DESIGN,
-  TEACHER_DESIGN,
-  LAWYER_DESIGN,
-  WORKER_DESIGN,
-  SOLDIER_DESIGN,
-  MERCHANT_DESIGN,
-  BANKER_DESIGN,
-  SCIENTIST_DESIGN,
-  ARTIST_DESIGN,
-  JOURNALIST_DESIGN,
-  POLICE_OFFICER_DESIGN,
-  POLITICIAN_DESIGN,
-  ENTREPRENEUR_DESIGN,
-  RARITY,
-} from '../data/occupations';
+import { ALL_OCCUPATION_DESIGNS, RARITY } from '../data/occupations';
 import { normalizeDeckRarity } from '../lib/deckRarity';
 import './AbilitiesModal.css';
-
-const ALL_DESIGNS = [
-  DOCTOR_DESIGN,
-  ENGINEER_DESIGN,
-  FARMER_DESIGN,
-  TEACHER_DESIGN,
-  LAWYER_DESIGN,
-  WORKER_DESIGN,
-  SOLDIER_DESIGN,
-  MERCHANT_DESIGN,
-  BANKER_DESIGN,
-  SCIENTIST_DESIGN,
-  ARTIST_DESIGN,
-  JOURNALIST_DESIGN,
-  POLICE_OFFICER_DESIGN,
-  POLITICIAN_DESIGN,
-  ENTREPRENEUR_DESIGN,
-];
 
 const rarityClass = (rarity) => {
   const n = normalizeDeckRarity(rarity);
@@ -62,7 +27,7 @@ export default function AbilitiesModal({ isOpen, onClose }) {
 
   const rows = useMemo(() => {
     const list = [];
-    for (const design of ALL_DESIGNS) {
+    for (const design of ALL_OCCUPATION_DESIGNS) {
       if (!design?.baseCharacters) continue;
       for (const c of design.baseCharacters) {
         if (!c.abilityName && !c.abilityText) continue;

@@ -31,13 +31,18 @@ const RULES_TEXT = `## Core Game Rules
 - Click the **Attack** button to deal their combined power as damage to the opponent's health.
 - You can only initiate an **attack once per turn**.
 
+## Black Market
+
+- If you control the **Black Market Exchange** economy card, **once per turn** you may **discard 1 card** from your hand to gain **+2 evolution points** (still capped at 20).
+
 ## Evolution
 
-- **Evolution slots**: You have 2 slots — **Target** and **Burn**. You can put a card into a slot **from your hand, from your field, or your active economy card**. Putting a card in a slot **costs evolution points equal to that card's play cost** again. You can return a card from a slot to your hand.
-- **Rules**: You can only evolve **Occupations with Occupations** and **Economy cards with Economy cards**.
-- **Evolve**: When both slots are filled, click **Evolve**. Both cards are removed and you receive **one new Evolved card** in your hand. 
-- Evolving **Occupations**: The evolved card keeps the Target’s ability (50% chance to also add the Burn’s ability), its rank goes up one step, **power and health** are combined, and **play cost** is **50%** Target **+** Burn cost or **50%** Target **−** Burn cost (minimum 1).
-- Evolving **Economy cards**: The evolved card combines both abilities, and **play cost** uses the same **50/50 add or subtract** rule from Target and Burn costs (minimum 1).
+- **Evolution slots**: Two slots — **Target** (first) and **Burn** (second). Place from **your hand**, **your field**, or **your active economy row**. Each placement costs **evolution points equal to that card’s play cost**. If you control **Universal Education Grant**, the **first** slot placement each turn costs **1** fewer EP (that step can go to **0**).
+- **Pairing**: Only **two occupation** cards or **two economy** cards can be evolved together (not a mix).
+- **Returning cards**: Before you click **Evolve**, you can pull a card out of a slot; **the EP you paid to place it is refunded**. It goes back to **hand**, **field**, or **economy row** depending on where it came from.
+- **Evolve**: When both slots hold a valid pair, click **Evolve**. Both cards are removed and you receive **one** new card in your hand.
+- **Occupations**: **Power** and **health** are **added**. **Tier (rarities)**: if **both** cards are **Tier 1**, the result is **Tier 2**; **otherwise** the result is **Tier 3**. **Play cost**: **50%** chance the Burn’s play cost is **added** to the Target’s, **50%** **subtracted** (minimum **1**). The evolved card **keeps the Target’s ability**; **50%** chance to **also** add the Burn’s ability (skipped if the two abilities are identical). The card’s **evolution color / frame** advances on the track shown in the header.
+- **Economy cards**: **Effect** text is **combined**. **Play cost** uses the same **50/50 add or subtract** rule (minimum **1**).
 
 ## Win Condition
 

@@ -64,8 +64,8 @@ export default function EvolutionArea({
     <div className={`evolution-area ${isActive ? 'evolution-area--active' : ''}`}>
       <div className="evolution-area__label">Evolution</div>
       <p className="evolution-area__hint">
-        Placing a card in a slot costs its play cost in evolution points. Returning a card refunds that cost (you
-        did not evolve). Field cards can return to your hand or to the field.
+        Placing a card costs its play cost in EP (first slot placement each turn can be −1 EP if you control Universal
+        Education Grant). Returning a card refunds that EP—back to hand, field, or economy row.
       </p>
       <div className="evolution-area__slots">
         {padded.slice(0, SLOT_COUNT).map((card, index) => (
@@ -113,7 +113,13 @@ export default function EvolutionArea({
                 className={`evolution-area__empty evolution-area__empty--${index === 0 ? 'target' : 'burn'}`}
                 onClick={() => onPlaceInSlot?.(index)}
                 disabled={!canPlace}
-                title={!hasCardSelected ? 'Select a card in hand or on your field' : !canAffordSlotCost ? 'Not enough evolution points' : 'Place selected card here (costs play cost)'}
+                title={
+                  !hasCardSelected
+                    ? 'Select a card in hand, on your field, or your economy row'
+                    : !canAffordSlotCost
+                      ? 'Not enough evolution points'
+                      : 'Place selected card here (costs play cost)'
+                }
               >
                 <span className="evolution-area__empty-text">{index === 0 ? 'Target' : 'Burn'}</span>
               </button>

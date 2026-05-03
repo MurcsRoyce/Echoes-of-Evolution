@@ -3,6 +3,8 @@ import { getColorHex, getRankForColorId } from '../data/colors';
 import { normalizeDeckRarity } from '../lib/deckRarity';
 import './CharacterCard.css';
 
+const DECK_RANK_LABEL = { basic: 'Basic', advanced: 'Advanced', rare: 'Rare' };
+
 /** Build image src from path; encodes each segment so your exact filenames (e.g. with spaces) work. */
 function portraitSrc(path) {
   if (!path) return '';
@@ -36,9 +38,10 @@ export default function CharacterCard({ character, compact }) {
   const costValue = playCost ?? tier ?? 1;
   const attackValue = power ?? 0;
   const healthValue = health ?? 0;
-  const evolvedRankLabel = isEvolved
-    ? (getRankForColorId(evolution_color_id) ?? rarity ?? 'Evolved')
-    : null;
+
+  const rankLabel = isEvolved
+    ? getRankForColorId(evolution_color_id) ?? rarity ?? 'Evolved'
+    : DECK_RANK_LABEL[deckRarity] ?? rarity ?? 'Basic';
 
   return (
     <div
@@ -81,14 +84,12 @@ export default function CharacterCard({ character, compact }) {
         <span className="character-card__ability-name">{abilityName}</span>
         <p className="character-card__ability-text">{abilityText}</p>
       </div>
-      {evolvedRankLabel && (
-        <span
-          className="character-card__evolved-badge"
-          title={`Evolved — ${evolvedRankLabel} rank`}
-        >
-          {evolvedRankLabel}
-        </span>
-      )}
+      <span
+        className="character-card__rank-badge"
+        title={isEvolved ? `Evolved — ${rankLabel} rank` : `Rank: ${rankLabel}`}
+      >
+        {rankLabel}
+      </span>
     </div>
   );
 }

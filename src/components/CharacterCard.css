@@ -194,7 +194,7 @@
   overflow-y: auto;
 }
 
-.character-card__evolved-badge {
+.character-card__rank-badge {
   position: absolute;
   bottom: 8px;
   right: 8px;
@@ -296,7 +296,7 @@
   padding: 0 3px;
 }
 
-.character-card--compact .character-card__evolved-badge {
+.character-card--compact .character-card__rank-badge {
   max-width: calc(100% - 14px);
   bottom: 5px;
   right: 5px;

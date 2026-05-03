@@ -88,16 +88,16 @@
   height: 22px;
   padding: 0 5px;
   border-radius: 5px;
-  border: 2px solid rgba(80, 50, 40, 0.9);
+  border: 2px solid rgba(160, 110, 210, 0.95);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 2px;
   font-size: 0.8rem;
   font-weight: 700;
-  color: #e8c4a0;
-  background: linear-gradient(180deg, #4a3028 0%, #2d2018 50%, #1a1210 100%);
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(140, 80, 60, 0.25);
+  color: #e4d0ff;
+  background: linear-gradient(180deg, #4a2d68 0%, #321a4a 50%, #1e102e 100%);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(190, 150, 255, 0.28);
 }
 
 .character-card__attack-icon {
@@ -110,16 +110,16 @@
   height: 22px;
   padding: 0 5px;
   border-radius: 5px;
-  border: 2px solid rgba(50, 70, 50, 0.9);
+  border: 2px solid rgba(210, 70, 70, 0.95);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 2px;
   font-size: 0.8rem;
   font-weight: 700;
-  color: #a0e0a0;
-  background: linear-gradient(180deg, #2a4a28 0%, #182d18 50%, #101a10 100%);
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(80, 140, 80, 0.25);
+  color: #ffc8c8;
+  background: linear-gradient(180deg, #5a2028 0%, #3a1418 50%, #240c10 100%);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 120, 120, 0.22);
 }
 
 .character-card__health-icon {

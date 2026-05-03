@@ -28,7 +28,13 @@ import AbilitiesModal from './components/AbilitiesModal';
 import EvolveModal from './components/EvolveModal';
 import ErrorBoundary from './components/ErrorBoundary';
 import { getCurrentMatch, leaveMatch } from './lib/matchmaking';
-import { getGameState, setGameState, subscribeGameState, createInitialGameState } from './lib/gameStateSync';
+import {
+  getGameState,
+  setGameState,
+  subscribeGameState,
+  createInitialGameState,
+  mergeGameState,
+} from './lib/gameStateSync';
 import { playSound, SOUND_MUTED_STORAGE_KEY } from './lib/sounds';
 import { savePersistedGameState, loadPersistedGameState, clearPersistedGameState } from './lib/persistedGameState';
 import { normalizeDeckRarity, deckTierFromNormalizedRarity } from './lib/deckRarity';
@@ -393,6 +399,17 @@ export default function App() {
     };
   }, [matchId, isSyncedMatch, view]);
 
+  // Fallback if Realtime misses updates (tab sleep, network): poll shared state periodically.
+  useEffect(() => {
+    if (!isSyncedMatch || view !== 'game' || !matchId || gameOver) return;
+    const id = setInterval(() => {
+      void getGameState(matchId).then((s) => {
+        if (s) setMetaState(s);
+      });
+    }, 3000);
+    return () => clearInterval(id);
+  }, [isSyncedMatch, view, matchId, gameOver]);
+
   useEffect(() => {
     if (!matchId || !playerSlot || view !== 'game' || !isSyncedMatch) {
       if (!matchId) lastRestoredMatchRef.current = null;
@@ -444,28 +461,36 @@ export default function App() {
     });
   }, [isSyncedMatch, matchId, playerSlot, deck, hand, field, evolutionSlots, economyField, firstTurnDrawDone, playerHasDrawnThisTurn, playerHasStartedTurn]);
 
-  // Push our field and economy to shared state so opponent sees our board (only when ours actually changed)
+  // Push our field and economy to shared state (merge with latest server row so we never wipe opponent updates).
   const lastSyncedFieldEconomyRef = useRef({ field: null, economyField: null });
   useEffect(() => {
-    if (!isSyncedMatch || !matchId || !playerSlot || !metaState) return;
+    if (!isSyncedMatch || !matchId || !playerSlot) return;
     const fieldJson = JSON.stringify(field);
     const economyJson = JSON.stringify(economyField);
     if (
       lastSyncedFieldEconomyRef.current.field === fieldJson &&
       lastSyncedFieldEconomyRef.current.economyField === economyJson
     ) return;
-    lastSyncedFieldEconomyRef.current = { field: fieldJson, economyField: economyJson };
-    const myKey = playerSlot === 1 ? 'player1' : 'player2';
-    const next = {
-      ...metaState,
-      [myKey]: {
-        ...metaState[myKey],
-        field: Array.isArray(field) ? field : [],
-        economyField: Array.isArray(economyField) ? economyField : [],
-      },
+
+    let cancelled = false;
+    void mergeGameState(matchId, (next) => {
+      const myKey = playerSlot === 1 ? 'player1' : 'player2';
+      if (!next[myKey]) return next;
+      next[myKey] = {
+        ...next[myKey],
+        field: Array.isArray(field) ? JSON.parse(fieldJson) : [],
+        economyField: Array.isArray(economyField) ? JSON.parse(economyJson) : [],
+      };
+      return next;
+    }).then((merged) => {
+      if (cancelled || !merged) return;
+      lastSyncedFieldEconomyRef.current = { field: fieldJson, economyField: economyJson };
+      setMetaState(merged);
+    });
+    return () => {
+      cancelled = true;
     };
-    setGameState(matchId, next);
-  }, [isSyncedMatch, matchId, playerSlot, metaState, field, economyField]);
+  }, [isSyncedMatch, matchId, playerSlot, field, economyField]);
 
   useEffect(() => {
     if (!reconnectedJustNow) return;
@@ -798,10 +823,8 @@ export default function App() {
       }
     }
     
-    if (isSyncedMatch) {
-      setMetaState((prev) => {
-        if (!prev) return prev;
-        const next = JSON.parse(JSON.stringify(prev));
+    if (isSyncedMatch && matchId) {
+      void mergeGameState(matchId, (next) => {
         const myKey = playerSlot === 1 ? 'player1' : 'player2';
         const oppKey = playerSlot === 1 ? 'player2' : 'player1';
 
@@ -836,8 +859,9 @@ export default function App() {
           if (next[oppKey].health <= 0) next.gameOver = { winner: playerSlot };
         }
 
-        void setGameState(matchId, next);
         return next;
+      }).then((merged) => {
+        if (merged) setMetaState(merged);
       });
     }
   }, [drawCards, isSyncedMatch, localOpponentHealth, localOpponentShield, matchId, playerSlot]);
@@ -890,6 +914,7 @@ export default function App() {
           const next = JSON.parse(JSON.stringify(prev));
           const myKey = playerSlot === 1 ? 'player1' : 'player2';
           next[myKey].evolutionPoints = (next[myKey].evolutionPoints ?? 0) - cost;
+          next[myKey].field = nextField.map((c) => ({ ...c }));
           void setGameState(matchId, next);
           return next;
         });
@@ -984,24 +1009,31 @@ export default function App() {
         return;
       }
       // Target is on opponent field
-      if (isSyncedMatch && metaState) {
-        const oppKey = playerSlot === 1 ? 'player2' : 'player1';
-        const oppField = metaState[oppKey]?.field ?? [];
-        const target = oppField.find((c) => (c.instanceId || c.id) === targetId);
-        if (!target) return;
-        const currentHealth = getCardHealth(target, oppField);
-        const maxHealth = getMaxHealth(target, oppField);
-        const newHealth = Math.min(currentHealth + healAmount, maxHealth);
-        const next = JSON.parse(JSON.stringify(metaState));
-        next[oppKey].field = next[oppKey].field.map((c) => {
-          if ((c.instanceId || c.id) !== targetId) return c;
-          return { ...c, currentHealth: newHealth, regeneratesThisTurn: Boolean(pendingEnterPlayTarget.regenThisTurn) };
+      if (isSyncedMatch && matchId) {
+        void mergeGameState(matchId, (next) => {
+          const oppKey = playerSlot === 1 ? 'player2' : 'player1';
+          const oppField = next[oppKey]?.field ?? [];
+          const target = oppField.find((c) => (c.instanceId || c.id) === targetId);
+          if (!target) return null;
+          const currentHealth = getCardHealth(target, oppField);
+          const maxHealth = getMaxHealth(target, oppField);
+          const newHealth = Math.min(currentHealth + healAmount, maxHealth);
+          next[oppKey].field = next[oppKey].field.map((c) => {
+            if ((c.instanceId || c.id) !== targetId) return c;
+            return { ...c, currentHealth: newHealth, regeneratesThisTurn: Boolean(pendingEnterPlayTarget.regenThisTurn) };
+          });
+          return next;
+        }).then((merged) => {
+          if (merged) {
+            setMetaState(merged);
+            setAttackToast({
+              message: `${targetCard.name} gained +${healAmount} HP and Regenerate this turn.`,
+              key: Date.now(),
+            });
+            setPendingEnterPlayTarget(null);
+            playSound('play', soundMuted);
+          }
         });
-        setMetaState(next);
-        setGameState(matchId, next);
-        setAttackToast({ message: `${target.name || targetCard.name} gained +${healAmount} HP and Regenerate this turn.`, key: Date.now() });
-        setPendingEnterPlayTarget(null);
-        playSound('play', soundMuted);
         return;
       }
       const target = testOpponentField.find((c) => (c.instanceId || c.id) === targetId);
@@ -1019,31 +1051,38 @@ export default function App() {
     }
 
     // Damage: opponent only
-    if (isSyncedMatch && metaState) {
-      const oppKey = playerSlot === 1 ? 'player2' : 'player1';
-      const oppField = metaState[oppKey]?.field ?? [];
-      const target = oppField.find((c) => (c.instanceId || c.id) === targetId);
-      if (!target) return;
-      const currentHealth = getCardHealth(target, oppField);
-      const newHealth = currentHealth - pendingEnterPlayTarget.damage;
-      const next = JSON.parse(JSON.stringify(metaState));
-      const nextOppField = next[oppKey].field
-        .map((c) => {
-          const cid = c.instanceId || c.id;
-          if (cid !== targetId) return c;
-          if (newHealth <= 0) return null;
-          return { ...c, currentHealth: newHealth };
-        })
-        .filter(Boolean);
-      next[oppKey].field = nextOppField;
-      setMetaState(next);
-      setGameState(matchId, next);
-      setAttackToast({
-        message: `Dealt ${pendingEnterPlayTarget.damage} damage to ${target.name || targetCard.name}${newHealth <= 0 ? ' (defeated)!' : '.'}`,
-        key: Date.now(),
+    if (isSyncedMatch && matchId) {
+      const dmg = pendingEnterPlayTarget.damage;
+      void mergeGameState(matchId, (next) => {
+        const oppKey = playerSlot === 1 ? 'player2' : 'player1';
+        const oppField = next[oppKey]?.field ?? [];
+        const target = oppField.find((c) => (c.instanceId || c.id) === targetId);
+        if (!target) return null;
+        const currentHealth = getCardHealth(target, oppField);
+        const newHealth = currentHealth - dmg;
+        const nextOppField = next[oppKey].field
+          .map((c) => {
+            const cid = c.instanceId || c.id;
+            if (cid !== targetId) return c;
+            if (newHealth <= 0) return null;
+            return { ...c, currentHealth: newHealth };
+          })
+          .filter(Boolean);
+        next[oppKey].field = nextOppField;
+        return next;
+      }).then((merged) => {
+        if (!merged) return;
+        setMetaState(merged);
+        const oppKey = playerSlot === 1 ? 'player2' : 'player1';
+        const t = merged[oppKey]?.field?.find((c) => (c.instanceId || c.id) === targetId);
+        const defeated = !t;
+        setAttackToast({
+          message: `Dealt ${dmg} damage to ${targetCard.name}${defeated ? ' (defeated)!' : '.'}`,
+          key: Date.now(),
+        });
+        setPendingEnterPlayTarget(null);
+        playSound('attack', soundMuted);
       });
-      setPendingEnterPlayTarget(null);
-      playSound('attack', soundMuted);
       return;
     }
 
@@ -1067,7 +1106,7 @@ export default function App() {
     });
     setPendingEnterPlayTarget(null);
     playSound('attack', soundMuted);
-  }, [pendingEnterPlayTarget, isSyncedMatch, metaState, playerSlot, matchId, soundMuted, testOpponentField, field]);
+  }, [pendingEnterPlayTarget, isSyncedMatch, playerSlot, matchId, soundMuted, testOpponentField, field]);
 
   const placeInEvolutionSlot = useCallback((slotIndex) => {
     if (slotIndex < 0 || slotIndex > 1) return;
@@ -1098,12 +1137,14 @@ export default function App() {
     if (ep < cost) return;
     
     setEvolutionPoints((e) => e - cost);
-    if (isSyncedMatch && metaState) {
-      const next = JSON.parse(JSON.stringify(metaState));
-      const myKey = playerSlot === 1 ? 'player1' : 'player2';
-      next[myKey].evolutionPoints = (next[myKey].evolutionPoints ?? 0) - cost;
-      setMetaState(next);
-      setGameState(matchId, next);
+    if (isSyncedMatch && matchId) {
+      void mergeGameState(matchId, (next) => {
+        const myKey = playerSlot === 1 ? 'player1' : 'player2';
+        next[myKey].evolutionPoints = (next[myKey].evolutionPoints ?? 0) - cost;
+        return next;
+      }).then((merged) => {
+        if (merged) setMetaState(merged);
+      });
     }
     
     setEvolutionSlots((prev) => {
@@ -1124,7 +1165,7 @@ export default function App() {
       setSelectedFieldId(null);
       setAttackSelection((prev) => prev.filter((id) => id !== selectedFieldId));
     }
-  }, [selectedHandId, selectedFieldId, selectedEconomyId, hand, field, economyField, evolutionPoints, evolutionSlots, usedEducationGrantThisTurn, isSyncedMatch, metaState, me, playerSlot, matchId]);
+  }, [selectedHandId, selectedFieldId, selectedEconomyId, hand, field, economyField, evolutionPoints, evolutionSlots, usedEducationGrantThisTurn, isSyncedMatch, me, playerSlot, matchId]);
 
   const returnFromEvolutionSlot = useCallback((slotIndex) => {
     const card = evolutionSlots[slotIndex];
@@ -1214,22 +1255,24 @@ export default function App() {
 
     setPlayerHasStartedTurn(false);
     setTurn('opponent');
-    if (isSyncedMatch && metaState) {
-      const next = JSON.parse(JSON.stringify(metaState));
-      next.turn = next.turn === 1 ? 2 : 1;
-      const oppKey = playerSlot === 1 ? 'player2' : 'player1';
-      next[oppKey].field = (next[oppKey].field ?? []).map((c) => {
-        if (!c.regeneratesThisTurn) return c;
-        const cur = getCardHealth(c, next[oppKey].field);
-        const max = getMaxHealth(c, next[oppKey].field);
-        const cardNext = { ...c, currentHealth: Math.min(cur + 1, max) };
-        delete cardNext.regeneratesThisTurn;
-        return cardNext;
+    if (isSyncedMatch && matchId) {
+      void mergeGameState(matchId, (next) => {
+        next.turn = next.turn === 1 ? 2 : 1;
+        const oppKey = playerSlot === 1 ? 'player2' : 'player1';
+        next[oppKey].field = (next[oppKey].field ?? []).map((c) => {
+          if (!c.regeneratesThisTurn) return c;
+          const cur = getCardHealth(c, next[oppKey].field);
+          const max = getMaxHealth(c, next[oppKey].field);
+          const cardNext = { ...c, currentHealth: Math.min(cur + 1, max) };
+          delete cardNext.regeneratesThisTurn;
+          return cardNext;
+        });
+        return next;
+      }).then((merged) => {
+        if (merged) setMetaState(merged);
       });
-      setMetaState(next);
-      setGameState(matchId, next);
     }
-  }, [isSyncedMatch, metaState, matchId, playerSlot, field, economyField, evolutionPoints, me, applyGameStateChanges]);
+  }, [isSyncedMatch, matchId, playerSlot, field, economyField, evolutionPoints, me, applyGameStateChanges]);
 
   const startTurn = useCallback(() => {
     setFirstCharacterPlayedFromHandThisTurn(false);
@@ -1273,18 +1316,20 @@ export default function App() {
     );
     setTurnUpkeepOpen(true);
 
-    if (isSyncedMatch && metaState) {
-      const next = { ...metaState };
-      const key = playerSlot === 1 ? 'player1' : 'player2';
-      next[key] = {
-        ...next[key],
-        evolutionPoints: Math.min((next[key].evolutionPoints ?? 0) + baseGain + extraEp + additionalEp, STARTING_EVOLUTION_POINTS),
-        shield: hasReactiveShield ? REACTIVE_SHIELD_AMOUNT : 0,
-      };
-      setMetaState(next);
-      setGameState(matchId, next);
+    if (isSyncedMatch && matchId) {
+      void mergeGameState(matchId, (next) => {
+        const key = playerSlot === 1 ? 'player1' : 'player2';
+        next[key] = {
+          ...next[key],
+          evolutionPoints: Math.min((next[key].evolutionPoints ?? 0) + baseGain + extraEp + additionalEp, STARTING_EVOLUTION_POINTS),
+          shield: hasReactiveShield ? REACTIVE_SHIELD_AMOUNT : 0,
+        };
+        return next;
+      }).then((merged) => {
+        if (merged) setMetaState(merged);
+      });
     }
-  }, [isSyncedMatch, metaState, playerSlot, matchId, economyField, field, evolutionPoints, me, drawCards]);
+  }, [isSyncedMatch, playerSlot, matchId, economyField, field, evolutionPoints, me, drawCards]);
 
   const handleStartTurnClick = useCallback(() => {
     if (!isSyncedMatch && turn === 'opponent') {
@@ -1448,20 +1493,22 @@ export default function App() {
       setAttackSelection([]);
       return;
     }
-    if (isSyncedMatch && metaState) {
-      const next = JSON.parse(JSON.stringify(metaState));
-      const oppKey = playerSlot === 1 ? 'player2' : 'player1';
-      const opp = next[oppKey];
-      const { health: oh, shield: os } = applyPlayerDamage(
-        opp.health ?? STARTING_HEALTH,
-        opp.shield ?? 0,
-        totalPower
-      );
-      opp.health = oh;
-      opp.shield = os;
-      if (opp.health <= 0) next.gameOver = { winner: playerSlot };
-      setMetaState(next);
-      setGameState(matchId, next);
+    if (isSyncedMatch && matchId) {
+      void mergeGameState(matchId, (next) => {
+        const oppKey = playerSlot === 1 ? 'player2' : 'player1';
+        const opp = next[oppKey];
+        const { health: oh, shield: os } = applyPlayerDamage(
+          opp.health ?? STARTING_HEALTH,
+          opp.shield ?? 0,
+          totalPower
+        );
+        opp.health = oh;
+        opp.shield = os;
+        if (opp.health <= 0) next.gameOver = { winner: playerSlot };
+        return next;
+      }).then((merged) => {
+        if (merged) setMetaState(merged);
+      });
     } else {
       const { health: oh, shield: os } = applyPlayerDamage(
         localOpponentHealth,
@@ -1477,7 +1524,7 @@ export default function App() {
     setHasAttackedThisTurn(true);
     playSound('attack', soundMuted);
     setAttackToast({ message: `You dealt ${totalPower} damage to the opponent!`, key: Date.now() });
-  }, [attackSelection, field, isSyncedMatch, localOpponentHealth, localOpponentShield, metaState, playerSlot, matchId, soundMuted]);
+  }, [attackSelection, field, isSyncedMatch, localOpponentHealth, localOpponentShield, playerSlot, matchId, soundMuted]);
 
   const canAffordSlotCost = Boolean(selectedCard && epForCost >= (selectedCard.playCost ?? 1));
 
@@ -1537,14 +1584,19 @@ export default function App() {
     setUsedBlackMarketThisTurn(true);
     setBlackMarketSelecting(false);
     setEvolutionPoints((ep) => Math.min(ep + 2, STARTING_EVOLUTION_POINTS));
-    if (isSyncedMatch && metaState) {
-      const next = JSON.parse(JSON.stringify(metaState));
-      const key = playerSlot === 1 ? 'player1' : 'player2';
-      next[key] = { ...next[key], evolutionPoints: Math.min((next[key].evolutionPoints ?? 0) + 2, STARTING_EVOLUTION_POINTS) };
-      setMetaState(next);
-      setGameState(matchId, next);
+    if (isSyncedMatch && matchId) {
+      void mergeGameState(matchId, (next) => {
+        const key = playerSlot === 1 ? 'player1' : 'player2';
+        next[key] = {
+          ...next[key],
+          evolutionPoints: Math.min((next[key].evolutionPoints ?? 0) + 2, STARTING_EVOLUTION_POINTS),
+        };
+        return next;
+      }).then((merged) => {
+        if (merged) setMetaState(merged);
+      });
     }
-  }, [blackMarketSelecting, isSyncedMatch, metaState, playerSlot, matchId]);
+  }, [blackMarketSelecting, isSyncedMatch, playerSlot, matchId]);
 
   if (view === 'lobby') {
     if (authEnabled && authInitializing) {

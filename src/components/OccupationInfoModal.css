@@ -55,3 +55,21 @@
   color: rgba(200, 190, 160, 0.6);
   margin: 0;
 }
+
+.occupation-modal__economy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 0 12px;
+}
+
+.occupation-modal__economy-role {
+  margin: 0;
+  max-width: 28rem;
+  font-size: 0.9rem;
+  font-style: italic;
+  line-height: 1.45;
+  color: rgba(200, 210, 190, 0.88);
+  text-align: center;
+}

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { TIERS, CARD_LIBRARY } from '../data/cards';
-import { ECONOMY_CARDS } from '../data/economyCards';
+import { ECONOMY_CARDS, isEconomyCard } from '../data/economyCards';
 import { fetchCards } from '../lib/cardsDb';
 import { getColorHex, getTierColorHex } from '../data/colors';
 import './CardSetPanel.css';
@@ -16,16 +16,18 @@ export default function CardSetPanel({ onCardClick }) {
   );
   const occupationCards = useMemo(() => {
     const source = cards.length > 0 ? cards : CARD_LIBRARY;
-    return source.map((c) => {
-      const base = baseLibraryById[c.id];
-      // Keep server extras, but force canonical local tier/flavor for known occupations.
-      if (!base) return c;
-      return {
-        ...c,
-        tier: base.tier,
-        flavor: c.flavor ?? base.flavor,
-      };
-    });
+    return source
+      .filter((c) => !isEconomyCard({ id: c.id }))
+      .map((c) => {
+        const base = baseLibraryById[c.id];
+        // Keep server extras, but force canonical local tier/flavor for known occupations.
+        if (!base) return c;
+        return {
+          ...c,
+          tier: base.tier,
+          flavor: c.flavor ?? base.flavor,
+        };
+      });
   }, [cards, baseLibraryById]);
   const listItems = useMemo(
     () => [
@@ -96,7 +98,7 @@ export default function CardSetPanel({ onCardClick }) {
               : getBaseTierColor(card.tier) ?? '#e8e0c8';
           return (
             <li
-              key={card.id}
+              key={`${kind}-${card.id}`}
               className="card-set-panel__item card-set-panel__item--clickable"
               onClick={() => onCardClick?.(card.id)}
               onKeyDown={(e) => e.key === 'Enter' && onCardClick?.(card.id)}

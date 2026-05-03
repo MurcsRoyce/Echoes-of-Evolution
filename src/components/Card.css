@@ -67,6 +67,14 @@
   border: 2px solid rgba(80, 110, 140, 0.5);
 }
 
+/* Generic deck-style cards on the play field: match character card footprint */
+.play-area .card {
+  width: 2.5in;
+  min-height: 3.5in;
+  height: 3.5in;
+  box-sizing: border-box;
+}
+
 .card__back {
   width: 60%;
   height: 70%;

@@ -9,7 +9,7 @@ import {
 import { getCachedDisplayName } from '../lib/profileDisplayName';
 import './Lobby.css';
 
-export default function Lobby({ onMatchFound, onStartTutorial }) {
+export default function Lobby({ onMatchFound, onStartTutorial, onLogout }) {
   const [status, setStatus] = useState('idle'); // 'idle' | 'finding' | 'error'
   const [errorMessage, setErrorMessage] = useState(null);
   const [queueCount, setQueueCount] = useState(null);
@@ -59,6 +59,11 @@ export default function Lobby({ onMatchFound, onStartTutorial }) {
     await leaveQueue();
     setStatus('idle');
     setErrorMessage(null);
+  };
+
+  const handleLogoutClick = async () => {
+    if (!onLogout) return;
+    await onLogout();
   };
 
   return (
@@ -115,6 +120,16 @@ export default function Lobby({ onMatchFound, onStartTutorial }) {
               Try again
             </button>
           </div>
+        )}
+
+        {onLogout && (
+          <button
+            type="button"
+            className="lobby__logout-btn"
+            onClick={handleLogoutClick}
+          >
+            Log out
+          </button>
         )}
 
         <p className="lobby__hint">2 players per match. You’ll be matched when another player joins.</p>

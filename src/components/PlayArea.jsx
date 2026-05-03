@@ -1,6 +1,7 @@
 import Card from './Card';
 import CharacterCard from './CharacterCard';
 import { getCardPower, getCardHealth, getCharacterFromCard } from '../lib/abilities';
+import { isEvolvedCollectionCard } from '../lib/evolvedCollection';
 import './PlayArea.css';
 
 export default function PlayArea({
@@ -12,6 +13,7 @@ export default function PlayArea({
   animatedCardId,
   attackSelectedIds = [],
   targetable = false,
+  onSaveEvolvedCard,
 }) {
   const hasCards = Array.isArray(cards) && cards.length > 0;
   const attackSet = new Set(Array.isArray(attackSelectedIds) ? attackSelectedIds : []);
@@ -51,6 +53,12 @@ export default function PlayArea({
                     key={cardKey}
                     className={`play-area__card-wrap ${isSelected ? 'play-area__card-wrap--selected' : ''} ${justPlayed ? 'play-area__card-wrap--just-played' : ''} ${isAttackReady ? 'play-area__card-wrap--attack-ready' : ''} ${targetable ? 'play-area__card-wrap--targetable' : ''}`}
                     onClick={() => onSelectCard?.(card)}
+                    onContextMenu={(e) => {
+                      if (!onSaveEvolvedCard || !isEvolvedCollectionCard(card)) return;
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onSaveEvolvedCard(card, { clientX: e.clientX, clientY: e.clientY });
+                    }}
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => e.key === 'Enter' && onSelectCard?.(card)}

@@ -19,15 +19,19 @@ import CardSetDropdown from './components/CardSetDropdown';
 import OccupationInfoModal from './components/OccupationInfoModal';
 import EvolutionArea from './components/EvolutionArea';
 import EconomyArea from './components/EconomyArea';
+import BoardDeckPile from './components/BoardDeckPile';
 import ChatPanel from './components/ChatPanel';
+import MatchPlayersOnline from './components/MatchPlayersOnline';
 import Lobby from './components/Lobby';
 import AuthScreen from './components/AuthScreen';
 import './components/AuthScreen.css';
 import RulesModal from './components/RulesModal';
 import AbilitiesModal from './components/AbilitiesModal';
 import EvolveModal from './components/EvolveModal';
+import DeckBuilderModal from './components/DeckBuilderModal';
+import CardSaveContextMenu from './components/CardSaveContextMenu';
 import ErrorBoundary from './components/ErrorBoundary';
-import { getCurrentMatch, leaveMatch } from './lib/matchmaking';
+import { getCurrentMatch, leaveMatch, leaveQueue } from './lib/matchmaking';
 import {
   getGameState,
   setGameState,
@@ -40,6 +44,13 @@ import { savePersistedGameState, loadPersistedGameState, clearPersistedGameState
 import { normalizeDeckRarity, deckTierFromNormalizedRarity } from './lib/deckRarity';
 import { applyPlayerDamage } from './lib/playerDamage';
 import { applyPlayerDamageWithFieldMedic, fieldHasFieldMedic } from './lib/fieldMedic';
+import { resolveIncomingDamageWithEmergencyHealthcare } from './lib/emergencyHealthcare';
+import { addSavedEvolvedCard, getSavedEvolvedCards } from './lib/evolvedCollection';
+import {
+  EVOLUTION_SOURCE,
+  stripEvolutionSlotMeta,
+  getEvolutionSlotRefundAmount,
+} from './lib/evolutionSlotMeta';
 import { buildTurnUpkeepLines } from './lib/turnUpkeepSummary';
 import {
   getCharacterDesignById,
@@ -64,6 +75,11 @@ const THEME_STORAGE_KEY = 'echoes-theme';
 
 const STARTING_HEALTH = 100;
 const STARTING_EVOLUTION_POINTS = 20;
+/**
+ * Action phase: auto end turn after this long (resets on play / attack / evolve).
+ * Pre-action: auto Start turn if the player does not click it within this time.
+ */
+const TURN_TIMER_SECONDS = 60;
 const EVOLUTION_POINTS_PER_TURN = 2;
 /** Pause between each tutorial opponent step (start of turn, play card, attack, end). */
 const TUTORIAL_OPPONENT_ACTION_DELAY_MS = 3000;
@@ -89,6 +105,13 @@ function computeEvolvedPlayCostFromTargetAndBurn(targetCard, burnCard) {
 
 const DECK_SIZE = 40;
 const TEST_OPPONENT_FIELD_SIZE = 4;
+const MAX_PLAYER_HAND = 8;
+/** Worker — Legacy: draw when this card is Target or Burn and you complete evolution. */
+const MASTER_CRAFTPERSON_ID = 'master-craftsperson';
+
+function countMasterCraftspersonInEvolutionSlots(cardA, cardB) {
+  return [cardA, cardB].filter((c) => c?.id === MASTER_CRAFTPERSON_ID).length;
+}
 
 function buildTestOpponentField() {
   const pool = [];
@@ -195,6 +218,10 @@ export default function App() {
   const [rulesOpen, setRulesOpen] = useState(false);
   const [evolveOpen, setEvolveOpen] = useState(false);
   const [abilitiesOpen, setAbilitiesOpen] = useState(false);
+  const [deckBuilderOpen, setDeckBuilderOpen] = useState(false);
+  const [cardSaveMenu, setCardSaveMenu] = useState(null);
+
+  const savedCollectionEntries = deckBuilderOpen ? getSavedEvolvedCards() : [];
   
   const [turn, setTurn] = useState('player');
   const [playerHasStartedTurn, setPlayerHasStartedTurn] = useState(false);
@@ -215,6 +242,8 @@ export default function App() {
   const [lastPlayedCardInstanceId, setLastPlayedCardInstanceId] = useState(null);
   const [lastEvolvedCardInstanceId, setLastEvolvedCardInstanceId] = useState(null);
   const [damageFlash, setDamageFlash] = useState(false);
+  /** Brief full-viewport shake when the opponent damages our health (synced / local / tutorial). */
+  const [screenShake, setScreenShake] = useState(false);
   const [attackSelection, setAttackSelection] = useState([]);
   const [attackedThisTurn, setAttackedThisTurn] = useState([]);
   const [hasAttackedThisTurn, setHasAttackedThisTurn] = useState(false);
@@ -229,6 +258,7 @@ export default function App() {
   const [localOpponentShield, setLocalOpponentShield] = useState(0);
   const [localOpponentEvolutionPoints, setLocalOpponentEvolutionPoints] = useState(STARTING_EVOLUTION_POINTS);
   const [localOpponentEconomyField, setLocalOpponentEconomyField] = useState([]);
+  const [localOpponentUsedHealthcareThisTurn, setLocalOpponentUsedHealthcareThisTurn] = useState(false);
   const [localGameOver, setLocalGameOver] = useState(null);
   const [gameOverOverlayDismissed, setGameOverOverlayDismissed] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
@@ -250,6 +280,10 @@ export default function App() {
   const playerFieldForMedicRef = useRef(field);
   const prevPlayerHealthForFieldMedicRef = useRef(null);
   const deckRef = useRef(deck);
+  const endTurnRef = useRef(() => {});
+  const handleStartTurnClickRef = useRef(() => {});
+  const playerEconomyFieldRef = useRef(economyField);
+  const usedHealthcareThisTurnRef = useRef(false);
 
   const isSyncedMatch = matchId && !isLocalPracticeMatch(matchId);
   const me = metaState && playerSlot ? metaState[playerSlot === 1 ? 'player1' : 'player2'] : null;
@@ -277,14 +311,36 @@ export default function App() {
   const gameOver = isSyncedMatch && metaState?.gameOver ? metaState.gameOver : localGameOver;
   const showGameOverOverlay = Boolean(gameOver) && !gameOverOverlayDismissed;
   const canAct = isPlayerTurn && playerHasStartedTurn && !gameOver;
+
+  const [turnTimerKey, setTurnTimerKey] = useState(0);
+  const [turnTimeRemaining, setTurnTimeRemaining] = useState(TURN_TIMER_SECONDS);
+  const bumpTurnTimer = useCallback(() => setTurnTimerKey((k) => k + 1), []);
+
+  const [startTurnTimeRemaining, setStartTurnTimeRemaining] = useState(TURN_TIMER_SECONDS);
+
   const showLocalOpponentPhase = Boolean(!isSyncedMatch && turn === 'opponent' && !gameOver);
   const showPracticeActionBar = isPlayerTurn || showLocalOpponentPhase;
   const startTurnBlockedByTutorialBot =
     matchId === 'tutorial' && showLocalOpponentPhase && tutorialOpponentActing;
+  const canClickStartTurn = !playerHasStartedTurn && !startTurnBlockedByTutorialBot;
+  const needsStartTurnCountdown =
+    view === 'game' &&
+    Boolean(matchId) &&
+    !gameOver &&
+    canClickStartTurn &&
+    showPracticeActionBar;
 
   useEffect(() => {
     deckRef.current = deck;
   }, [deck]);
+
+  useEffect(() => {
+    playerEconomyFieldRef.current = economyField;
+  }, [economyField]);
+
+  useEffect(() => {
+    usedHealthcareThisTurnRef.current = usedHealthcareThisTurn;
+  }, [usedHealthcareThisTurn]);
 
   useEffect(() => {
     playerFieldForMedicRef.current = field;
@@ -519,7 +575,10 @@ export default function App() {
       const damageDuringOpponentTurn = isSyncedMatch
         ? metaState != null && metaState.turn !== playerSlot
         : turn === 'opponent';
-      if (damageDuringOpponentTurn) playSound('attack', soundMuted);
+      if (damageDuringOpponentTurn) {
+        playSound('attack', soundMuted);
+        setScreenShake(true);
+      }
     }
   }, [displayHealth, view, isSyncedMatch, metaState?.turn, playerSlot, turn, soundMuted]);
 
@@ -528,6 +587,12 @@ export default function App() {
     const t = setTimeout(() => setDamageFlash(false), 650);
     return () => clearTimeout(t);
   }, [damageFlash]);
+
+  useEffect(() => {
+    if (!screenShake) return;
+    const t = setTimeout(() => setScreenShake(false), 520);
+    return () => clearTimeout(t);
+  }, [screenShake]);
 
   useEffect(() => {
     if (!attackToast) return;
@@ -539,6 +604,15 @@ export default function App() {
     setMatchId(id);
     setPlayerSlot(slot);
     setView('game');
+  }, []);
+
+  const handleLobbyLogout = useCallback(async () => {
+    try {
+      await leaveQueue();
+    } catch {
+      /* ignore */
+    }
+    if (supabase) await supabase.auth.signOut();
   }, []);
 
   const enterLocalPractice = useCallback((mode) => {
@@ -578,6 +652,7 @@ export default function App() {
     setLocalOpponentShield(0);
     setLocalOpponentEvolutionPoints(STARTING_EVOLUTION_POINTS);
     setLocalOpponentEconomyField([]);
+    setLocalOpponentUsedHealthcareThisTurn(false);
     setLocalGameOver(null);
     setTutorialOpponentActing(false);
     if (mode === 'tutorial') {
@@ -630,7 +705,15 @@ export default function App() {
 
         const hasNatInfra = oppEconomySnap.some((c) => c.id === 'national-infrastructure');
         const hasReactiveShield = oppEconomySnap.some((c) => c.id === REACTIVE_SHIELD_MANDATE_ID);
-        const startEffects = executeStartOfTurnAbilities({ field: oppFieldSnap, ep: oppEpSnap });
+        const oppEpAfterIncome = Math.min(
+          oppEpSnap + EVOLUTION_POINTS_PER_TURN + (hasNatInfra ? 1 : 0),
+          STARTING_EVOLUTION_POINTS
+        );
+        const startEffects = executeStartOfTurnAbilities({
+          field: oppFieldSnap,
+          ep: oppEpSnap,
+          epForThresholdAbilities: oppEpAfterIncome,
+        });
         let ep = Math.min(
           oppEpSnap + EVOLUTION_POINTS_PER_TURN + (hasNatInfra ? 1 : 0) + (startEffects?.effects?.ep ?? 0),
           STARTING_EVOLUTION_POINTS
@@ -708,16 +791,28 @@ export default function App() {
         if (totalPower > 0) {
           const h0 = tutorialPlayerHealthRef.current;
           const s0 = tutorialPlayerShieldRef.current;
+          const { damage: dmgToApply, consumedHealthcare } = resolveIncomingDamageWithEmergencyHealthcare(
+            totalPower,
+            playerEconomyFieldRef.current,
+            usedHealthcareThisTurnRef.current
+          );
+          if (consumedHealthcare) {
+            usedHealthcareThisTurnRef.current = true;
+            setUsedHealthcareThisTurn(true);
+          }
           const { health: ph, shield: ps } = applyPlayerDamageWithFieldMedic(
             playerFieldForMedicRef.current,
             h0,
             s0,
-            totalPower,
+            dmgToApply,
             STARTING_HEALTH
           );
           setHealth(ph);
           setPlayerShield(ps);
-          setAttackToast({ message: `Opponent attacked for ${totalPower} damage.`, key: Date.now() });
+          const toastMsg = consumedHealthcare
+            ? `Opponent attacked for ${totalPower} damage. Emergency Healthcare Act reduced it by 1.`
+            : `Opponent attacked for ${totalPower} damage.`;
+          setAttackToast({ message: toastMsg, key: Date.now() });
           if (ph <= 0) {
             setLocalGameOver({ winner: 2 });
             skipYourTurnDing = true;
@@ -754,6 +849,7 @@ export default function App() {
     setLocalOpponentShield(0);
     setLocalOpponentEvolutionPoints(STARTING_EVOLUTION_POINTS);
     setLocalOpponentEconomyField([]);
+    setLocalOpponentUsedHealthcareThisTurn(false);
     setLocalGameOver(null);
     setTutorialOpponentDeck([]);
     setTutorialOpponentHand([]);
@@ -802,6 +898,34 @@ export default function App() {
     }
   }, [deck, firstTurnDrawDone, hand.length, drawCards]);
 
+  const handleRequestSaveEvolvedCard = useCallback((card, point) => {
+    setCardSaveMenu({
+      card,
+      x: point.clientX,
+      y: point.clientY,
+    });
+  }, []);
+
+  const handleConfirmSaveCardFromMenu = useCallback(() => {
+    setCardSaveMenu((prev) => {
+      if (!prev?.card) return null;
+      const result = addSavedEvolvedCard(prev.card);
+      if (result.ok) {
+        setAttackToast({
+          message: 'Saved to collection. Open Deck Builder to view.',
+          key: Date.now(),
+        });
+      } else {
+        setAttackToast({ message: result.message || 'Could not save card.', key: Date.now() });
+      }
+      return null;
+    });
+  }, []);
+
+  const handleDismissSaveCardMenu = useCallback(() => {
+    setCardSaveMenu(null);
+  }, []);
+
   const applyGameStateChanges = useCallback((changes) => {
     if (!changes) return;
     if (changes.health !== undefined) setHealth((h) => Math.min(h + changes.health, STARTING_HEALTH));
@@ -810,10 +934,17 @@ export default function App() {
     if (!isSyncedMatch && changes.oppHealth !== undefined) {
       const delta = changes.oppHealth;
       if (delta < 0) {
+        const raw = -delta;
+        const { damage: effDamage, consumedHealthcare } = resolveIncomingDamageWithEmergencyHealthcare(
+          raw,
+          localOpponentEconomyField,
+          localOpponentUsedHealthcareThisTurn
+        );
+        if (consumedHealthcare) setLocalOpponentUsedHealthcareThisTurn(true);
         const { health: oh, shield: os } = applyPlayerDamage(
           localOpponentHealth,
           localOpponentShield,
-          -delta
+          effDamage
         );
         setLocalOpponentHealth(oh);
         setLocalOpponentShield(os);
@@ -843,13 +974,23 @@ export default function App() {
         if (changes.oppHealth !== undefined) {
           const delta = changes.oppHealth;
           if (delta < 0) {
-            const { health: oh, shield: os } = applyPlayerDamage(
-              next[oppKey].health ?? STARTING_HEALTH,
-              next[oppKey].shield ?? 0,
-              -delta
+            const opp = next[oppKey];
+            const raw = -delta;
+            const econ = Array.isArray(opp.economyField) ? opp.economyField : [];
+            const alreadyHc = opp.usedEmergencyHealthcareActThisTurn === true;
+            const { damage: effDamage, consumedHealthcare } = resolveIncomingDamageWithEmergencyHealthcare(
+              raw,
+              econ,
+              alreadyHc
             );
-            next[oppKey].health = oh;
-            next[oppKey].shield = os;
+            const { health: oh, shield: os } = applyPlayerDamage(
+              opp.health ?? STARTING_HEALTH,
+              opp.shield ?? 0,
+              effDamage
+            );
+            opp.health = oh;
+            opp.shield = os;
+            if (consumedHealthcare) opp.usedEmergencyHealthcareActThisTurn = true;
           } else {
             next[oppKey].health = Math.min(
               STARTING_HEALTH,
@@ -864,7 +1005,16 @@ export default function App() {
         if (merged) setMetaState(merged);
       });
     }
-  }, [drawCards, isSyncedMatch, localOpponentHealth, localOpponentShield, matchId, playerSlot]);
+  }, [
+    drawCards,
+    isSyncedMatch,
+    localOpponentHealth,
+    localOpponentShield,
+    localOpponentEconomyField,
+    localOpponentUsedHealthcareThisTurn,
+    matchId,
+    playerSlot,
+  ]);
 
   useEffect(() => {
     if (!isSyncedMatch || view !== 'game' || gameOver || !playerSlot) return;
@@ -944,7 +1094,8 @@ export default function App() {
     setHand((h) => h.filter((c) => (c.instanceId || c.id) !== selectedHandId));
     setSelectedHandId(null);
     playSound('play', soundMuted);
-    
+    bumpTurnTimer();
+
     const refundMessages = [];
     const hasIndustrialAutomation = economyField.some((c) => c.id === 'industrial-automation') || (isEconomyCard(card) && card.id === 'industrial-automation');
     if (hasIndustrialAutomation && !usedIndustrialAutomationThisTurn) {
@@ -960,7 +1111,7 @@ export default function App() {
     if (refundMessages.length > 0) {
       setAttackToast({ message: refundMessages.join(' '), key: Date.now() });
     }
-  }, [selectedHandId, hand, field, evolutionPoints, economyField, isSyncedMatch, metaState, me, opponent, matchId, testOpponentField, playerSlot, soundMuted, usedIndustrialAutomationThisTurn, firstCharacterPlayedFromHandThisTurn, drawCards]);
+  }, [selectedHandId, hand, field, evolutionPoints, economyField, isSyncedMatch, metaState, me, opponent, matchId, testOpponentField, playerSlot, soundMuted, usedIndustrialAutomationThisTurn, firstCharacterPlayedFromHandThisTurn, drawCards, bumpTurnTimer]);
 
   const selectHand = (card) => {
     const id = card?.instanceId || card?.id;
@@ -1129,13 +1280,20 @@ export default function App() {
 
     let cost = card.playCost ?? 1;
     const hasEducationGrant = economyField.some((c) => c.id === 'universal-education-grant');
-    if (hasEducationGrant && !usedEducationGrantThisTurn) {
+    const appliedEducationDiscount = hasEducationGrant && !usedEducationGrantThisTurn;
+    if (appliedEducationDiscount) {
       cost = Math.max(0, cost - 1);
       setUsedEducationGrantThisTurn(true);
     }
     const ep = isSyncedMatch && me ? me.evolutionPoints : evolutionPoints;
     if (ep < cost) return;
-    
+
+    const evolutionSource = fromHand
+      ? EVOLUTION_SOURCE.HAND
+      : fromEconomy
+        ? EVOLUTION_SOURCE.ECONOMY
+        : EVOLUTION_SOURCE.FIELD;
+
     setEvolutionPoints((e) => e - cost);
     if (isSyncedMatch && matchId) {
       void mergeGameState(matchId, (next) => {
@@ -1146,11 +1304,17 @@ export default function App() {
         if (merged) setMetaState(merged);
       });
     }
-    
+
     setEvolutionSlots((prev) => {
       const next = [...prev];
       if (next[slotIndex] != null) return prev;
-      next[slotIndex] = { ...card, instanceId: card.instanceId || `${card.id}-${Date.now()}` };
+      next[slotIndex] = {
+        ...card,
+        instanceId: card.instanceId || `${card.id}-${Date.now()}`,
+        _evolutionSource: evolutionSource,
+        _evolutionSlotCostPaid: cost,
+        _evolutionEducationDiscount: appliedEducationDiscount,
+      };
       return next;
     });
     
@@ -1167,19 +1331,64 @@ export default function App() {
     }
   }, [selectedHandId, selectedFieldId, selectedEconomyId, hand, field, economyField, evolutionPoints, evolutionSlots, usedEducationGrantThisTurn, isSyncedMatch, me, playerSlot, matchId]);
 
-  const returnFromEvolutionSlot = useCallback((slotIndex) => {
-    const card = evolutionSlots[slotIndex];
-    if (!card) return;
-    setHand((h) => [...h, { ...card, instanceId: card.instanceId || `${card.id}-${Date.now()}` }]);
-    setEvolutionSlots((prev) => {
-      const next = [...prev];
-      next[slotIndex] = null;
-      return next;
-    });
-  }, [evolutionSlots]);
+  const returnFromEvolutionSlot = useCallback(
+    (slotIndex, destination = 'hand') => {
+      const card = evolutionSlots[slotIndex];
+      if (!card) return;
+
+      const source = card._evolutionSource;
+      const refund = getEvolutionSlotRefundAmount(card);
+
+      if (destination === 'field') {
+        if (isEconomyCard(card) || source !== EVOLUTION_SOURCE.FIELD) return;
+      }
+      if (destination === 'economy') {
+        if (!isEconomyCard(card) || source !== EVOLUTION_SOURCE.ECONOMY) return;
+      }
+
+      if (card._evolutionEducationDiscount) {
+        setUsedEducationGrantThisTurn(false);
+      }
+
+      setEvolutionPoints((e) => Math.min(e + refund, STARTING_EVOLUTION_POINTS));
+      if (isSyncedMatch && matchId) {
+        void mergeGameState(matchId, (next) => {
+          const myKey = playerSlot === 1 ? 'player1' : 'player2';
+          next[myKey].evolutionPoints = Math.min(
+            (next[myKey].evolutionPoints ?? 0) + refund,
+            STARTING_EVOLUTION_POINTS
+          );
+          return next;
+        }).then((merged) => {
+          if (merged) setMetaState(merged);
+        });
+      }
+
+      const cleaned = stripEvolutionSlotMeta(card);
+      const instanceId = cleaned.instanceId || `${cleaned.id}-${Date.now()}`;
+
+      setEvolutionSlots((prev) => {
+        const next = [...prev];
+        next[slotIndex] = null;
+        return next;
+      });
+
+      if (destination === 'field') {
+        setField((f) => [...f, { ...cleaned, instanceId }]);
+      } else if (destination === 'economy') {
+        setEconomyField([{ ...cleaned, instanceId }]);
+      } else {
+        setHand((h) => [...h, { ...cleaned, instanceId }]);
+      }
+    },
+    [evolutionSlots, isSyncedMatch, matchId, playerSlot]
+  );
 
   const canDraw = firstTurnDrawDone ? hand.length < 8 : deck.length >= 4;
   const canClickDraw = canAct && canDraw && !playerHasDrawnThisTurn && deck.length > 0;
+
+  /** Opponent deck size on the board: known in tutorial; hidden online / test (not synced). */
+  const opponentBoardDeckCount = isSyncedMatch ? null : matchId === 'tutorial' ? tutorialOpponentDeck.length : null;
 
   const turnIndicator = (() => {
     if (isSyncedMatch && !isPlayerTurn) {
@@ -1255,6 +1464,7 @@ export default function App() {
 
     setPlayerHasStartedTurn(false);
     setTurn('opponent');
+    setLocalOpponentUsedHealthcareThisTurn(false);
     if (isSyncedMatch && matchId) {
       void mergeGameState(matchId, (next) => {
         next.turn = next.turn === 1 ? 2 : 1;
@@ -1274,6 +1484,24 @@ export default function App() {
     }
   }, [isSyncedMatch, matchId, playerSlot, field, economyField, evolutionPoints, me, applyGameStateChanges]);
 
+  endTurnRef.current = endTurn;
+
+  useEffect(() => {
+    if (!canAct || gameOver) return undefined;
+    setTurnTimeRemaining(TURN_TIMER_SECONDS);
+    const id = setInterval(() => {
+      setTurnTimeRemaining((s) => {
+        if (s <= 0) return 0;
+        if (s <= 1) {
+          queueMicrotask(() => endTurnRef.current());
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [canAct, gameOver, turnTimerKey]);
+
   const startTurn = useCallback(() => {
     setFirstCharacterPlayedFromHandThisTurn(false);
     setUsedBlackMarketThisTurn(false);
@@ -1292,8 +1520,13 @@ export default function App() {
     if (hasReactiveShield) setPlayerShield(REACTIVE_SHIELD_AMOUNT);
     else setPlayerShield(0);
 
-    const currentEp = isSyncedMatch && me ? me.evolutionPoints : evolutionPoints;
-    const startEffects = executeStartOfTurnAbilities({ field, ep: currentEp });
+    const currentEp = isSyncedMatch && me ? (me.evolutionPoints ?? STARTING_EVOLUTION_POINTS) : evolutionPoints;
+    const epAfterStartIncome = Math.min(currentEp + baseGain + extraEp, STARTING_EVOLUTION_POINTS);
+    const startEffects = executeStartOfTurnAbilities({
+      field,
+      ep: currentEp,
+      epForThresholdAbilities: epAfterStartIncome,
+    });
     const additionalEp = startEffects?.effects?.ep || 0;
     const drawAmount = startEffects?.effects?.draw || 0;
     
@@ -1323,13 +1556,15 @@ export default function App() {
           ...next[key],
           evolutionPoints: Math.min((next[key].evolutionPoints ?? 0) + baseGain + extraEp + additionalEp, STARTING_EVOLUTION_POINTS),
           shield: hasReactiveShield ? REACTIVE_SHIELD_AMOUNT : 0,
+          usedEmergencyHealthcareActThisTurn: false,
         };
         return next;
       }).then((merged) => {
         if (merged) setMetaState(merged);
       });
     }
-  }, [isSyncedMatch, playerSlot, matchId, economyField, field, evolutionPoints, me, drawCards]);
+    bumpTurnTimer();
+  }, [isSyncedMatch, playerSlot, matchId, economyField, field, evolutionPoints, me, drawCards, bumpTurnTimer]);
 
   const handleStartTurnClick = useCallback(() => {
     if (!isSyncedMatch && turn === 'opponent') {
@@ -1343,6 +1578,24 @@ export default function App() {
     if (isSyncedMatch && metaState && metaState.turn !== playerSlot) return;
     startTurn();
   }, [isSyncedMatch, turn, matchId, soundMuted, startTurn, playerHasStartedTurn, metaState, playerSlot]);
+
+  handleStartTurnClickRef.current = handleStartTurnClick;
+
+  useEffect(() => {
+    if (!needsStartTurnCountdown) return undefined;
+    setStartTurnTimeRemaining(TURN_TIMER_SECONDS);
+    const id = setInterval(() => {
+      setStartTurnTimeRemaining((s) => {
+        if (s <= 0) return 0;
+        if (s <= 1) {
+          queueMicrotask(() => handleStartTurnClickRef.current());
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [needsStartTurnCountdown]);
 
   useEffect(() => {
     if (isSyncedMatch && metaState?.turn === playerSlot) setPlayerHasStartedTurn(false);
@@ -1375,8 +1628,11 @@ export default function App() {
   }, [isSyncedMatch, metaState?.turn, playerSlot, view, soundMuted]);
 
   const performEvolve = useCallback(() => {
-    const [a, b] = evolutionSlots;
-    if (a == null || b == null) return;
+    const [rawA, rawB] = evolutionSlots;
+    if (rawA == null || rawB == null) return;
+
+    const a = stripEvolutionSlotMeta(rawA);
+    const b = stripEvolutionSlotMeta(rawB);
 
     const aEconomy = isEconomyCard(a);
     const bEconomy = isEconomyCard(b);
@@ -1399,6 +1655,7 @@ export default function App() {
       setHand((h) => [...h, evolved]);
       setLastEvolvedCardInstanceId(evolved.instanceId);
       playSound('evolve', soundMuted);
+      bumpTurnTimer();
       return;
     }
 
@@ -1479,11 +1736,27 @@ export default function App() {
       isEvolved: true,
       evolution_color_id: getTierColorId(evolvedTier),
     };
+
+    const legacyDraws = countMasterCraftspersonInEvolutionSlots(a, b);
+    const maxLegacyDraw = Math.min(
+      legacyDraws,
+      Math.max(0, MAX_PLAYER_HAND - hand.length - 1),
+      deckRef.current?.length ?? 0
+    );
+    if (maxLegacyDraw > 0) {
+      drawCards(maxLegacyDraw);
+      setAttackToast({
+        message: `Legacy: Drew ${maxLegacyDraw} card${maxLegacyDraw === 1 ? '' : 's'}.`,
+        key: Date.now(),
+      });
+    }
+
     setEvolutionSlots([null, null]);
     setHand((h) => [...h, evolved]);
     setLastEvolvedCardInstanceId(evolved.instanceId);
     playSound('evolve', soundMuted);
-  }, [evolutionSlots, soundMuted]);
+    bumpTurnTimer();
+  }, [evolutionSlots, soundMuted, hand, drawCards, bumpTurnTimer]);
 
   const performAttack = useCallback(() => {
     if (attackSelection.length === 0) return;
@@ -1497,23 +1770,37 @@ export default function App() {
       void mergeGameState(matchId, (next) => {
         const oppKey = playerSlot === 1 ? 'player2' : 'player1';
         const opp = next[oppKey];
+        const econ = Array.isArray(opp.economyField) ? opp.economyField : [];
+        const alreadyHc = opp.usedEmergencyHealthcareActThisTurn === true;
+        const { damage: effDamage, consumedHealthcare } = resolveIncomingDamageWithEmergencyHealthcare(
+          totalPower,
+          econ,
+          alreadyHc
+        );
         const { health: oh, shield: os } = applyPlayerDamage(
           opp.health ?? STARTING_HEALTH,
           opp.shield ?? 0,
-          totalPower
+          effDamage
         );
         opp.health = oh;
         opp.shield = os;
+        if (consumedHealthcare) opp.usedEmergencyHealthcareActThisTurn = true;
         if (opp.health <= 0) next.gameOver = { winner: playerSlot };
         return next;
       }).then((merged) => {
         if (merged) setMetaState(merged);
       });
     } else {
+      const { damage: effDamage, consumedHealthcare } = resolveIncomingDamageWithEmergencyHealthcare(
+        totalPower,
+        localOpponentEconomyField,
+        localOpponentUsedHealthcareThisTurn
+      );
+      if (consumedHealthcare) setLocalOpponentUsedHealthcareThisTurn(true);
       const { health: oh, shield: os } = applyPlayerDamage(
         localOpponentHealth,
         localOpponentShield,
-        totalPower
+        effDamage
       );
       setLocalOpponentHealth(oh);
       setLocalOpponentShield(os);
@@ -1524,7 +1811,20 @@ export default function App() {
     setHasAttackedThisTurn(true);
     playSound('attack', soundMuted);
     setAttackToast({ message: `You dealt ${totalPower} damage to the opponent!`, key: Date.now() });
-  }, [attackSelection, field, isSyncedMatch, localOpponentHealth, localOpponentShield, playerSlot, matchId, soundMuted]);
+    bumpTurnTimer();
+  }, [
+    attackSelection,
+    field,
+    isSyncedMatch,
+    localOpponentHealth,
+    localOpponentShield,
+    localOpponentEconomyField,
+    localOpponentUsedHealthcareThisTurn,
+    playerSlot,
+    matchId,
+    soundMuted,
+    bumpTurnTimer,
+  ]);
 
   const canAffordSlotCost = Boolean(selectedCard && epForCost >= (selectedCard.playCost ?? 1));
 
@@ -1617,92 +1917,114 @@ export default function App() {
       <Lobby
         onMatchFound={handleMatchFound}
         onStartTutorial={handleStartTutorial}
+        onLogout={authEnabled ? handleLobbyLogout : undefined}
       />
     );
   }
 
   return (
-    <div className="app">
-      <aside className="app__left-sidebar" aria-label="Match chat">
-        <ErrorBoundary>
-          <ChatPanel matchId={matchId} playerSlot={playerSlot} />
-        </ErrorBoundary>
+    <div className={`app${screenShake ? ' app--screen-shake' : ''}`}>
+      <aside className="app__left-sidebar" aria-label="Match sidebar">
+        <div className="app__left-sidebar-stack">
+          <ErrorBoundary>
+            <MatchPlayersOnline matchId={matchId} playerSlot={playerSlot} isSyncedMatch={isSyncedMatch} />
+          </ErrorBoundary>
+          <div className="app__left-sidebar-chat-wrap">
+            <ErrorBoundary>
+              <ChatPanel matchId={matchId} playerSlot={playerSlot} />
+            </ErrorBoundary>
+          </div>
+        </div>
       </aside>
       <div className="app__content">
       <header className="app__header">
-        <div className="app__header-content">
+        <div className="app__header-brand">
           <h1 className="app__title">Echoes of Evolution</h1>
           <p className="app__tagline">When the stars align</p>
-          <ColorPalette />
         </div>
-        <div className="app__header-actions">
-          <button
-            type="button"
-            className="app__settings-btn"
-            onClick={() => setRulesOpen(true)}
-            aria-label="Open rules"
-          >
-            Rules
-          </button>
-          <button
-            type="button"
-            className="app__settings-btn"
-            onClick={() => setAbilitiesOpen(true)}
-            aria-label="Open abilities list"
-          >
-            Abilities
-          </button>
-          <a
-            className="app__settings-btn"
-            href="https://discord.gg/UYTyvVxMTf"
-            target="_blank"
-            rel="noreferrer noopener"
-            aria-label="Join Discord server"
-          >
-            Discord
-          </a>
-          <ErrorBoundary>
-            <CardSetDropdown
-              onCardClick={(id) => {
-                setOccupationInfoId(id);
-                setOccupationInfoOpen(true);
-              }}
-            />
-          </ErrorBoundary>
-          <button
-            type="button"
-            className="app__settings-btn"
-            onClick={() => setEvolveOpen(true)}
-            aria-label="How evolving works"
-          >
-            Evolve
-          </button>
-          <button
-            type="button"
-            className="app__settings-btn"
-            onClick={() => setSettingsOpen(true)}
-            aria-label="Open settings"
-          >
-            Settings
-          </button>
-          <button
-            type="button"
-            className="app__profile-btn"
-            onClick={() => setProfileOpen(true)}
-            aria-label="Open profile"
-          >
-            Profile
-          </button>
-          {matchId && isSyncedMatch && (
+        <div className="app__header-toolbar">
+          <div className="app__header-toolbar-left">
             <button
               type="button"
-              className="app__leave-match-btn"
-              onClick={handleLeaveMatch}
-              aria-label="Leave match"
+              className="app__settings-btn"
+              onClick={() => setDeckBuilderOpen(true)}
+              aria-label="Open deck builder"
             >
-              Leave match
+              Deck Builder
             </button>
-          )}
+            <button
+              type="button"
+              className="app__settings-btn"
+              onClick={() => setRulesOpen(true)}
+              aria-label="Open rules"
+            >
+              Rules
+            </button>
+            <button
+              type="button"
+              className="app__settings-btn"
+              onClick={() => setAbilitiesOpen(true)}
+              aria-label="Open abilities list"
+            >
+              Abilities
+            </button>
+            <ErrorBoundary>
+              <CardSetDropdown
+                onCardClick={(id) => {
+                  setOccupationInfoId(id);
+                  setOccupationInfoOpen(true);
+                }}
+              />
+            </ErrorBoundary>
+            <button
+              type="button"
+              className="app__settings-btn"
+              onClick={() => setEvolveOpen(true)}
+              aria-label="How evolving works"
+            >
+              Evolve
+            </button>
+            {matchId && isSyncedMatch && (
+              <button
+                type="button"
+                className="app__leave-match-btn"
+                onClick={handleLeaveMatch}
+                aria-label="Leave match"
+              >
+                Leave match
+              </button>
+            )}
+          </div>
+          <div className="app__header-toolbar-center">
+            <ColorPalette />
+          </div>
+          <div className="app__header-toolbar-right">
+            <a
+              className="app__settings-btn"
+              href="https://discord.gg/UYTyvVxMTf"
+              target="_blank"
+              rel="noreferrer noopener"
+              aria-label="Join Discord server"
+            >
+              Discord
+            </a>
+            <button
+              type="button"
+              className="app__settings-btn"
+              onClick={() => setSettingsOpen(true)}
+              aria-label="Open settings"
+            >
+              Settings
+            </button>
+            <button
+              type="button"
+              className="app__profile-btn"
+              onClick={() => setProfileOpen(true)}
+              aria-label="Open profile"
+            >
+              Profile
+            </button>
+          </div>
         </div>
       </header>
 
@@ -1746,6 +2068,23 @@ export default function App() {
       </ErrorBoundary>
 
       <ErrorBoundary>
+        <DeckBuilderModal
+          isOpen={deckBuilderOpen}
+          onClose={() => setDeckBuilderOpen(false)}
+          entries={savedCollectionEntries}
+        />
+      </ErrorBoundary>
+
+      {cardSaveMenu && (
+        <CardSaveContextMenu
+          x={cardSaveMenu.x}
+          y={cardSaveMenu.y}
+          onSave={handleConfirmSaveCardFromMenu}
+          onDismiss={handleDismissSaveCardMenu}
+        />
+      )}
+
+      <ErrorBoundary>
         <TurnUpkeepModal
           isOpen={turnUpkeepOpen}
           onClose={() => setTurnUpkeepOpen(false)}
@@ -1762,7 +2101,7 @@ export default function App() {
       <main className="app__main">
         <div className="app__game">
           <aside className="app__deck">
-            <Deck count={deck.length} onDraw={draw} canDraw={canClickDraw && deck.length > 0} />
+            <Deck />
           </aside>
           <section
             className={`app__board${matchId === 'tutorial' ? ' app__board--tutorial' : ''}`}
@@ -1788,13 +2127,16 @@ export default function App() {
               </div>
             )}
             <div className="app__board-row app__board-row--opponent">
-              <EconomyArea
-                cards={opponentEconomy}
-                selectedId={null}
-                onSelectCard={undefined}
-                label="Opponent Economy"
-                showHint={false}
-              />
+              <div className="app__board-side-column">
+                <BoardDeckPile label="Opponent deck" count={opponentBoardDeckCount} />
+                <EconomyArea
+                  cards={opponentEconomy}
+                  selectedId={null}
+                  onSelectCard={undefined}
+                  label="Opponent Economy"
+                  showHint={false}
+                />
+              </div>
               <div className="play-area-wrapper">
                 {pendingEnterPlayTarget && (
                   <div className="app__target-prompt">
@@ -1831,6 +2173,42 @@ export default function App() {
                   </div>
                 )}
               </div>
+              <div
+                className="app__board-turn-center"
+                aria-label={
+                  canAct ? 'Turn time remaining' : needsStartTurnCountdown ? 'Time to start turn' : undefined
+                }
+              >
+                {canAct ? (
+                  <>
+                    <span className="app__turn-timer__label">Turn</span>
+                    <span
+                      className={
+                        turnTimeRemaining <= 10
+                          ? 'app__turn-timer__value app__turn-timer__value--warn'
+                          : 'app__turn-timer__value'
+                      }
+                    >
+                      {turnTimeRemaining}s
+                    </span>
+                  </>
+                ) : needsStartTurnCountdown ? (
+                  <>
+                    <span className="app__turn-timer__label">Start</span>
+                    <span
+                      className={
+                        startTurnTimeRemaining <= 10
+                          ? 'app__turn-timer__value app__turn-timer__value--warn'
+                          : 'app__turn-timer__value'
+                      }
+                    >
+                      {startTurnTimeRemaining}s
+                    </span>
+                  </>
+                ) : (
+                  <span className="app__turn-timer__idle">—</span>
+                )}
+              </div>
               <DiceTracks
                 health={displayHealth}
                 shield={displayShield}
@@ -1841,13 +2219,34 @@ export default function App() {
               />
             </div>
             <div className="app__board-row app__board-row--player">
-              <EconomyArea
-                cards={economyField}
-                selectedId={selectedEconomyId}
-                onSelectCard={canAct ? selectEconomy : undefined}
-                label="Economy"
-                showHint={false}
-              />
+              <div className="app__board-side-column">
+                <div className="app__board-your-deck">
+                  <BoardDeckPile label="Your deck" count={deck.length} variant="player" />
+                  <button
+                    type="button"
+                    className={`app__draw-btn app__draw-btn--board-deck${canClickDraw ? ' app__draw-btn--active' : ''}`}
+                    onClick={draw}
+                    disabled={!canClickDraw}
+                    title={
+                      playerHasDrawnThisTurn
+                        ? 'Already drew this turn'
+                        : !firstTurnDrawDone
+                          ? 'Draw 4 cards (first turn only)'
+                          : 'Draw one card this turn'
+                    }
+                  >
+                    {firstTurnDrawDone ? 'Draw' : 'Draw 4'}
+                  </button>
+                </div>
+                <EconomyArea
+                  cards={economyField}
+                  selectedId={selectedEconomyId}
+                  onSelectCard={canAct ? selectEconomy : undefined}
+                  label="Economy"
+                  showHint={false}
+                  onSaveEvolvedCard={handleRequestSaveEvolvedCard}
+                />
+              </div>
               <PlayArea
                 cards={field}
                 selectedId={selectedFieldId}
@@ -1856,6 +2255,7 @@ export default function App() {
                 animatedCardId={lastPlayedCardInstanceId}
                 attackSelectedIds={attackSelection}
                 targetable={Boolean(pendingEnterPlayTarget?.heal)}
+                onSaveEvolvedCard={handleRequestSaveEvolvedCard}
               />
             </div>
           </section>
@@ -1869,7 +2269,7 @@ export default function App() {
             canAct={canAct}
             canAffordSlotCost={canAffordSlotCost}
             onPlaceInSlot={placeInEvolutionSlot}
-            onReturnToHand={returnFromEvolutionSlot}
+            onReturnFromSlot={returnFromEvolutionSlot}
             onEvolve={performEvolve}
           />
         </aside>
@@ -1878,18 +2278,6 @@ export default function App() {
       <section className="app__bottom">
         <div className="app__bottom-main">
           <section className="app__actions">
-            <div className="app__draw-group">
-              <span className="app__deck-count" aria-live="polite">{deck.length}</span>
-              <button
-                type="button"
-                className="app__draw-btn"
-                onClick={draw}
-                disabled={!canClickDraw}
-                title={playerHasDrawnThisTurn ? 'Already drew this turn' : !firstTurnDrawDone ? 'Draw 4 cards (first turn only)' : 'Draw one card this turn'}
-              >
-                {firstTurnDrawDone ? 'Draw' : 'Draw 4'}
-              </button>
-            </div>
             {showPracticeActionBar ? (
               <>
                 {showLocalOpponentPhase && (
@@ -1962,7 +2350,7 @@ export default function App() {
                 )}
                 <button
                   type="button"
-                  className="app__start-turn-btn"
+                  className={`app__start-turn-btn${canClickStartTurn ? ' app__start-turn-btn--active' : ''}`}
                   onClick={handleStartTurnClick}
                   disabled={playerHasStartedTurn || startTurnBlockedByTutorialBot}
                   title={
@@ -2021,7 +2409,7 @@ export default function App() {
             cards={hand}
             selectedId={selectedHandId}
             onSelectCard={abilityDiscardSelectingId ? handleAbilityDiscard : blackMarketSelecting ? handleBlackMarketDiscard : (canAct ? selectHand : () => {})}
-            evolvedCardId={lastEvolvedCardInstanceId}
+            onSaveEvolvedCard={handleRequestSaveEvolvedCard}
             disabled={!canAct && !blackMarketSelecting && !abilityDiscardSelectingId}
           />
         </div>

@@ -18,6 +18,7 @@ export function createInitialGameState() {
       evolutionPoints: INITIAL_EP,
       field: [],
       economyField: [],
+      usedEmergencyHealthcareActThisTurn: false,
     },
     player2: {
       health: INITIAL_HEALTH,
@@ -25,6 +26,7 @@ export function createInitialGameState() {
       evolutionPoints: INITIAL_EP,
       field: [],
       economyField: [],
+      usedEmergencyHealthcareActThisTurn: false,
     },
   };
 }

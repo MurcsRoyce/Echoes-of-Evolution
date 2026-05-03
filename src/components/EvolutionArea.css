@@ -122,6 +122,14 @@
   color: rgba(212, 175, 55, 0.7);
 }
 
+.evolution-area__return-row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  width: 100%;
+}
+
 .evolution-area__return {
   font-size: 0.7rem;
   padding: 4px 10px;
@@ -134,6 +142,16 @@
 
 .evolution-area__return:hover {
   border-color: rgba(212, 175, 55, 0.7);
+}
+
+.evolution-area__return--field {
+  background: rgba(28, 48, 40, 0.85);
+  color: rgba(160, 230, 180, 0.95);
+  border-color: rgba(100, 200, 140, 0.45);
+}
+
+.evolution-area__return--field:hover {
+  border-color: rgba(120, 220, 160, 0.75);
 }
 
 .evolution-area__evolve-btn {

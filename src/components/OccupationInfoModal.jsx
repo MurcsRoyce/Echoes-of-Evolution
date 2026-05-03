@@ -3,6 +3,7 @@ import { getOccupationDesign } from '../data/occupations';
 import { CARD_LIBRARY, TIERS } from '../data/cards';
 import { getEconomyCardById } from '../data/economyCards';
 import OccupationDesignSheet from './OccupationDesignSheet';
+import EconomyCard from './EconomyCard';
 import './OccupationInfoModal.css';
 
 export default function OccupationInfoModal({ isOpen, onClose, occupationId }) {
@@ -22,11 +23,11 @@ export default function OccupationInfoModal({ isOpen, onClose, occupationId }) {
 
   if (!isOpen) return null;
 
-  const design = occupationId ? getOccupationDesign(occupationId) : null;
-  const card = occupationId ? CARD_LIBRARY.find((c) => c.id === occupationId) : null;
   const economyCard = occupationId ? getEconomyCardById(occupationId) : null;
+  const design = occupationId && !economyCard ? getOccupationDesign(occupationId) : null;
+  const card = occupationId && !economyCard ? CARD_LIBRARY.find((c) => c.id === occupationId) : null;
   const dialogLabel =
-    design?.name ?? card?.name ?? economyCard?.name ?? 'Card info';
+    economyCard?.name ?? design?.name ?? card?.name ?? 'Card info';
 
   return (
     <div
@@ -49,25 +50,15 @@ export default function OccupationInfoModal({ isOpen, onClose, occupationId }) {
           ×
         </button>
         <div className="occupation-modal__content">
-          {design ? (
-            <OccupationDesignSheet design={design} />
-          ) : economyCard ? (
-            <div className="occupation-sheet occupation-sheet--simple">
-              <header className="occupation-sheet__header">
-                <h2 className="occupation-sheet__title">{economyCard.name}</h2>
-                <p className="occupation-sheet__subtitle">
-                  Economy card · Play cost ◆{economyCard.playCost}
-                </p>
-              </header>
-              <p className="occupation-sheet__quote" style={{ margin: '0 0 12px' }}>
-                {economyCard.effect}
-              </p>
+          {economyCard ? (
+            <div className="occupation-modal__economy">
+              <EconomyCard card={economyCard} />
               {economyCard.designRole && (
-                <p className="occupation-sheet__coming" style={{ fontStyle: 'italic', opacity: 0.9 }}>
-                  {economyCard.designRole}
-                </p>
+                <p className="occupation-modal__economy-role">{economyCard.designRole}</p>
               )}
             </div>
+          ) : design ? (
+            <OccupationDesignSheet design={design} />
           ) : card ? (
             <div className="occupation-sheet occupation-sheet--simple">
               <header className="occupation-sheet__header">

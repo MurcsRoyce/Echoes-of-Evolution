@@ -1,4 +1,5 @@
 import EconomyCard from './EconomyCard';
+import { isEvolvedCollectionCard } from '../lib/evolvedCollection';
 import './EconomyArea.css';
 
 export default function EconomyArea({
@@ -7,6 +8,7 @@ export default function EconomyArea({
   onSelectCard,
   label = 'Economy',
   showHint = true,
+  onSaveEvolvedCard,
 }) {
   const list = Array.isArray(cards) ? cards : [];
 
@@ -34,6 +36,12 @@ export default function EconomyArea({
                 <div
                   className={`economy-area__card-wrap ${isSelected ? 'economy-area__card-wrap--selected' : ''}`}
                   onClick={() => onSelectCard?.(card)}
+                  onContextMenu={(e) => {
+                    if (!onSaveEvolvedCard || !isEvolvedCollectionCard(card)) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onSaveEvolvedCard(card, { clientX: e.clientX, clientY: e.clientY });
+                  }}
                   onKeyDown={(e) => e.key === 'Enter' && onSelectCard?.(card)}
                   role={onSelectCard ? 'button' : undefined}
                   tabIndex={onSelectCard ? 0 : undefined}

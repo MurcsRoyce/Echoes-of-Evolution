@@ -7,23 +7,10 @@
 
 .deck__pile {
   position: relative;
-  cursor: pointer;
 }
 
 .deck__pile .card {
   margin: 0;
-}
-
-.deck__count {
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  background: rgba(0, 0, 0, 0.75);
-  color: #d4af37;
-  font-weight: 700;
-  font-size: 0.9rem;
-  padding: 2px 8px;
-  border-radius: 6px;
 }
 
 .deck__draw-btn {

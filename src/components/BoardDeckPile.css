@@ -1,0 +1,48 @@
+.board-deck-pile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  background: linear-gradient(180deg, rgba(15, 22, 35, 0.95) 0%, rgba(8, 12, 18, 0.98) 100%);
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  min-width: calc(1.8in + 24px);
+}
+
+.board-deck-pile__label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(212, 175, 55, 0.85);
+  text-align: center;
+  width: 100%;
+}
+
+.board-deck-pile__visual {
+  position: relative;
+}
+
+.board-deck-pile__count {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  min-width: 22px;
+  padding: 2px 7px;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #f0e6c8;
+  background: rgba(0, 0, 0, 0.78);
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  border-radius: 6px;
+}
+
+/* Your deck — count matches economy / field green accent */
+.board-deck-pile--player .board-deck-pile__count {
+  color: #b8f5c8;
+  text-shadow: 0 0 10px rgba(80, 220, 140, 0.45);
+  border-color: rgba(100, 200, 140, 0.65);
+  background: rgba(12, 32, 22, 0.88);
+}

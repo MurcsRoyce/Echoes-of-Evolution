@@ -1,24 +1,27 @@
 import { useState, useEffect, useRef } from 'react';
 import { subscribeMatchChat, sendMatchMessage } from '../lib/matchChat';
 import { isLocalPracticeMatch } from '../lib/localPractice';
-import { fetchProfile, getStoredProfileId } from '../lib/profilesDb';
+import { getCachedDisplayName, resolveDisplayNameForUi } from '../lib/profileDisplayName';
 import './ChatPanel.css';
 
 export default function ChatPanel({ matchId, playerSlot }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
-  const [localName, setLocalName] = useState('');
+  const [localName, setLocalName] = useState(() => getCachedDisplayName().trim());
   const listRef = useRef(null);
 
   useEffect(() => {
-    const id = getStoredProfileId();
-    if (id) {
-      fetchProfile(id).then(p => {
-        if (p?.display_name) setLocalName(p.display_name);
-      }).catch(console.error);
-    }
-  }, []);
+    let cancelled = false;
+    void resolveDisplayNameForUi().then((n) => {
+      if (cancelled) return;
+      const t = (n ?? '').trim();
+      if (t) setLocalName(t);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [matchId]);
 
   useEffect(() => {
     if (!matchId || isLocalPracticeMatch(matchId)) return;
@@ -49,7 +52,7 @@ export default function ChatPanel({ matchId, playerSlot }) {
     }
 
     setSending(true);
-    await sendMatchMessage(matchId, playerSlot, text, localName || undefined);
+    await sendMatchMessage(matchId, playerSlot, text, localName.trim() || undefined);
     setInput('');
     setSending(false);
   };
@@ -71,7 +74,9 @@ export default function ChatPanel({ matchId, playerSlot }) {
               className={`chat-panel__message ${m.player_slot === playerSlot ? 'chat-panel__message--own' : ''}`}
             >
               <span className="chat-panel__sender">
-                {m.display_name || `Player ${m.player_slot}`}
+                {m.display_name ||
+                  (m.player_slot === playerSlot ? localName.trim() || null : null) ||
+                  `Player ${m.player_slot}`}
               </span>
               <p className="chat-panel__body">{m.body}</p>
             </div>

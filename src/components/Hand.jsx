@@ -3,9 +3,10 @@ import CharacterCard from './CharacterCard';
 import EconomyCard from './EconomyCard';
 import { isEconomyCard } from '../data/economyCards';
 import { getCharacterFromCard } from '../lib/abilities';
+import { isEvolvedCollectionCard } from '../lib/evolvedCollection';
 import './Hand.css';
 
-export default function Hand({ cards, selectedId, onSelectCard, disabled }) {
+export default function Hand({ cards, selectedId, onSelectCard, onSaveEvolvedCard, disabled }) {
   return (
     <div className={`hand ${disabled ? 'hand--disabled' : ''}`}>
       <div className="hand__label">Hand</div>
@@ -20,6 +21,12 @@ export default function Hand({ cards, selectedId, onSelectCard, disabled }) {
                 key={key}
                 className={`hand__card-wrap ${isSelected ? 'hand__card-wrap--selected' : ''}`}
                 onClick={() => !disabled && onSelectCard?.(card)}
+                onContextMenu={(e) => {
+                  if (!onSaveEvolvedCard || !isEvolvedCollectionCard(card)) return;
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onSaveEvolvedCard(card, { clientX: e.clientX, clientY: e.clientY });
+                }}
                 role="button"
                 tabIndex={disabled ? -1 : 0}
                 onKeyDown={(e) => !disabled && e.key === 'Enter' && onSelectCard?.(card)}
@@ -45,6 +52,12 @@ export default function Hand({ cards, selectedId, onSelectCard, disabled }) {
                 key={key}
                 className={`hand__card-wrap ${isSelected ? 'hand__card-wrap--selected' : ''}`}
                 onClick={() => !disabled && onSelectCard?.(card)}
+                onContextMenu={(e) => {
+                  if (!onSaveEvolvedCard || !isEvolvedCollectionCard(card)) return;
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onSaveEvolvedCard(card, { clientX: e.clientX, clientY: e.clientY });
+                }}
                 role="button"
                 tabIndex={disabled ? -1 : 0}
                 onKeyDown={(e) => !disabled && e.key === 'Enter' && onSelectCard?.(card)}

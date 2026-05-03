@@ -1,0 +1,227 @@
+.deck-builder-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.deck-builder-modal__panel {
+  background: linear-gradient(165deg, #1a2235 0%, #0d1218 100%);
+  border: 2px solid rgba(212, 175, 55, 0.4);
+  border-radius: 12px;
+  /* Four 2.5in cards + gaps + padding (~11in); cap for small viewports */
+  max-width: min(1200px, calc(100vw - 48px));
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.deck-builder-modal__header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.deck-builder-modal__title {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #e8e0c8;
+}
+
+.deck-builder-modal__close {
+  background: none;
+  border: none;
+  color: rgba(212, 175, 55, 0.9);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.deck-builder-modal__close:hover {
+  color: #e8e0c8;
+}
+
+.deck-builder-modal__content {
+  flex: 1;
+  min-height: 0;
+  padding: 20px;
+  overflow-x: auto;
+  overflow-y: auto;
+  color: rgba(200, 190, 160, 0.92);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.deck-builder-modal__intro {
+  margin: 0 0 16px;
+}
+
+.deck-builder-modal__intro strong {
+  color: #e8e0c8;
+}
+
+.deck-builder-modal__count {
+  margin: 0 0 12px;
+  font-weight: 600;
+  color: rgba(140, 200, 255, 0.95);
+}
+
+.deck-builder-modal__grid {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, 2.5in);
+  gap: 16px;
+  justify-content: center;
+}
+
+.deck-builder-modal__grid-cell {
+  list-style: none;
+  display: flex;
+  justify-content: center;
+}
+
+.deck-builder-modal__grid-hit {
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 12px;
+  color: inherit;
+  font: inherit;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.deck-builder-modal__grid-hit:hover {
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.45);
+  transform: translateY(-3px);
+}
+
+.deck-builder-modal__grid-hit:focus-visible {
+  outline: 2px solid rgba(100, 160, 255, 0.9);
+  outline-offset: 3px;
+}
+
+.deck-builder-modal__grid-hit .character-card,
+.deck-builder-modal__grid-hit .economy-card {
+  display: block;
+}
+
+.deck-builder-modal__grid-placeholder {
+  width: 2.5in;
+  height: 3.5in;
+  box-sizing: border-box;
+  border-radius: 10px;
+  border: 2px dashed rgba(212, 175, 55, 0.35);
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  text-align: center;
+}
+
+.deck-builder-modal__grid-placeholder-name {
+  font-weight: 700;
+  color: #e8e0c8;
+  font-size: 0.95rem;
+}
+
+.deck-builder-modal__grid-placeholder-meta {
+  font-size: 0.75rem;
+  color: rgba(180, 170, 150, 0.85);
+}
+
+/* Card preview (stacked above main deck builder dialog) */
+.deck-builder-modal__card-preview-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.78);
+}
+
+.deck-builder-modal__card-preview-panel {
+  max-width: min(420px, 100vw - 32px);
+  max-height: min(92vh, 900px);
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(165deg, #1a2235 0%, #0d1218 100%);
+  border: 2px solid rgba(212, 175, 55, 0.45);
+  border-radius: 12px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+
+.deck-builder-modal__card-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+  flex-shrink: 0;
+}
+
+.deck-builder-modal__card-preview-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #e8e0c8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deck-builder-modal__card-preview-close {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: rgba(212, 175, 55, 0.9);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.deck-builder-modal__card-preview-close:hover {
+  color: #e8e0c8;
+}
+
+.deck-builder-modal__card-preview-body {
+  padding: 20px;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.deck-builder-modal__card-preview-body .character-card,
+.deck-builder-modal__card-preview-body .economy-card {
+  flex-shrink: 0;
+}
+
+.deck-builder-modal__card-preview-fallback {
+  margin: 0;
+  color: rgba(200, 180, 150, 0.9);
+}

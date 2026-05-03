@@ -166,12 +166,14 @@ export function executeManualAbility(card, gameState) {
 }
 
 export function executeStartOfTurnAbilities(gameState) {
-  const { field, ep } = gameState;
+  const { field, ep, epForThresholdAbilities } = gameState;
   const effects = { ep: 0, draw: 0 };
   let message = '';
+  /** Analyst checks 5+ EP after this turn's automatic EP gain (+2, etc.). */
+  const thresholdEp = epForThresholdAbilities != null ? epForThresholdAbilities : ep;
 
   for (const card of field) {
-    if (card.id === 'analyst' && ep >= 5) {
+    if (card.id === 'analyst' && thresholdEp >= 5) {
       effects.draw += 1;
       message = 'Analyst: Drew 1 card!';
     }

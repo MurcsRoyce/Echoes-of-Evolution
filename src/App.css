@@ -6,6 +6,48 @@
   color: var(--app-text);
 }
 
+@keyframes app-screen-shake {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  10% {
+    transform: translate(-14px, 7px) rotate(-0.6deg);
+  }
+  22% {
+    transform: translate(16px, -8px) rotate(0.5deg);
+  }
+  34% {
+    transform: translate(-12px, -9px) rotate(-0.45deg);
+  }
+  46% {
+    transform: translate(11px, 6px) rotate(0.4deg);
+  }
+  58% {
+    transform: translate(-8px, 4px) rotate(-0.25deg);
+  }
+  70% {
+    transform: translate(6px, -4px) rotate(0.2deg);
+  }
+  82% {
+    transform: translate(-4px, 2px) rotate(-0.1deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+}
+
+.app--screen-shake {
+  animation: app-screen-shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app--screen-shake {
+    animation: none;
+    will-change: auto;
+  }
+}
+
 .app__left-sidebar {
   flex-shrink: 0;
   width: 280px;
@@ -14,13 +56,32 @@
   padding: 16px 12px 16px 16px;
   border-right: 1px solid var(--app-header-border);
   background: rgba(8, 12, 18, 0.6);
+  min-height: 0;
+  max-height: 100vh;
+  box-sizing: border-box;
 }
 
-.app__left-sidebar .chat-panel {
+.app__left-sidebar-stack {
   flex: 1;
-  min-height: 200px;
-  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   max-height: calc(100vh - 32px);
+}
+
+.app__left-sidebar-chat-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.app__left-sidebar-chat-wrap .chat-panel {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+  max-height: none;
   max-width: none;
 }
 
@@ -35,39 +96,64 @@
   position: relative;
   z-index: 20; /* keep header + Card set dropdown above main board (evolution slots, cards) */
   padding: 10px 16px;
-  padding-right: 140px;
   border-bottom: 1px solid var(--app-header-border);
   background: var(--app-header-bg);
-}
-
-.app__header-content {
-  text-align: center;
-}
-
-.app__header .color-palette {
-  padding: 4px 8px;
-}
-
-.app__header-actions {
-  position: absolute;
-  top: 50%;
-  right: 16px;
-  transform: translateY(-50%);
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
   gap: 6px;
 }
 
-.app__header-actions .app__profile-btn,
-.app__header-actions .app__settings-btn,
-.app__header-actions .app__leave-match-btn {
+.app__header-brand {
+  text-align: center;
+}
+
+.app__header-toolbar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px 16px;
+  width: 100%;
+}
+
+.app__header-toolbar-left {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  justify-self: start;
+  justify-content: flex-start;
+  min-width: 0;
+}
+
+.app__header-toolbar-center {
+  justify-self: center;
+}
+
+.app__header-toolbar-center .color-palette {
+  padding: 4px 8px;
+}
+
+.app__header-toolbar-right {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  justify-self: end;
+  justify-content: flex-end;
+}
+
+.app__header-toolbar .app__profile-btn,
+.app__header-toolbar .app__settings-btn,
+.app__header-toolbar .app__leave-match-btn {
   padding: 5px 10px;
   font-size: 0.82rem;
   color: #4a9eff;
 }
 
-.app__header-actions .app__profile-btn:hover,
-.app__header-actions .app__settings-btn:hover,
-.app__header-actions .app__leave-match-btn:hover {
+.app__header-toolbar .app__profile-btn:hover,
+.app__header-toolbar .app__settings-btn:hover,
+.app__header-toolbar .app__leave-match-btn:hover {
   color: #6eb3ff;
 }
 
@@ -258,10 +344,11 @@
   gap: 24px;
   padding: 20px;
   width: 100%;
-  max-width: 1600px;
+  max-width: 2000px;
   box-sizing: border-box;
   margin: 0 auto;
   justify-content: center;
+  overflow-x: auto;
 }
 
 .app__economy-sidebar {
@@ -287,6 +374,15 @@
 
 .app__deck {
   flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.app__board-your-deck {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
 .app__board {
@@ -348,9 +444,19 @@
   align-items: flex-start; /* prevent economy panel from stretching with field height */
 }
 
+/* Deck pile (left) + economy: align bottoms so piles line up with economy card */
+.app__board-side-column {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
 .play-area-wrapper {
   flex: 1;
-  min-width: 0;
+  /* Do not shrink below four full-size cards + gaps (matches .play-area min-width) */
+  min-width: calc(4 * 2.5in + 3 * 16px + 40px);
   display: flex;
   flex-direction: column;
 }
@@ -390,6 +496,43 @@
   gap: 16px;
   padding-right: 20px;
   border-right: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.app__board-turn-center {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 4.5rem;
+  padding: 0 16px;
+  border-right: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.app__turn-timer__label {
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--app-muted);
+}
+
+.app__turn-timer__value {
+  font-weight: 800;
+  font-size: 1.1rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--app-accent);
+}
+
+.app__turn-timer__value--warn {
+  color: #ffdd44;
+  text-shadow: 0 0 12px rgba(255, 210, 60, 0.55);
+}
+
+.app__turn-timer__idle {
+  font-size: 1rem;
+  color: var(--app-muted);
+  opacity: 0.35;
 }
 
 .app__board-turn-text {
@@ -490,19 +633,6 @@
   gap: 24px;
 }
 
-.app__draw-group {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-}
-
-.app__deck-count {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--app-accent);
-}
-
 .app__draw-btn {
   background: var(--app-btn-bg);
   color: var(--app-accent);
@@ -522,6 +652,32 @@
 .app__draw-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.app__draw-btn--board-deck {
+  width: 100%;
+  max-width: calc(1.8in + 24px);
+  box-sizing: border-box;
+}
+
+@keyframes app-draw-btn-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 8px 2px rgba(255, 220, 60, 0.45),
+      0 0 20px 4px rgba(255, 200, 40, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 0 14px 4px rgba(255, 235, 100, 0.65),
+      0 0 28px 8px rgba(255, 200, 50, 0.35);
+  }
+}
+
+.app__draw-btn--active:not(:disabled) {
+  border-color: rgba(255, 215, 70, 0.95);
+  color: #ffeb66;
+  animation: app-draw-btn-glow 1.8s ease-in-out infinite;
 }
 
 .app__play-btn {
@@ -641,6 +797,12 @@
 .app__start-turn-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.app__start-turn-btn--active:not(:disabled) {
+  border-color: rgba(255, 215, 70, 0.95);
+  color: #ffeb66;
+  animation: app-draw-btn-glow 1.8s ease-in-out infinite;
 }
 
 .app__turn-message {

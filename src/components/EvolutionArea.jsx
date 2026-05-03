@@ -3,6 +3,7 @@ import CharacterCard from './CharacterCard';
 import EconomyCard from './EconomyCard';
 import { getCharacterFromCard } from '../lib/abilities';
 import { isEconomyCard } from '../data/economyCards';
+import { EVOLUTION_SOURCE } from '../lib/evolutionSlotMeta';
 import './EvolutionArea.css';
 
 const SLOT_COUNT = 2;
@@ -37,7 +38,17 @@ function SlotCard({ card }) {
   return <Card card={card} selected={false} onClick={undefined} />;
 }
 
-export default function EvolutionArea({ slots, selectedHandId, selectedFieldId, selectedEconomyId, canAct, canAffordSlotCost, onPlaceInSlot, onReturnToHand, onEvolve }) {
+export default function EvolutionArea({
+  slots,
+  selectedHandId,
+  selectedFieldId,
+  selectedEconomyId,
+  canAct,
+  canAffordSlotCost,
+  onPlaceInSlot,
+  onReturnFromSlot,
+  onEvolve,
+}) {
   const slotsArray = Array.isArray(slots) ? slots : [];
   const padded = [...slotsArray];
   while (padded.length < SLOT_COUNT) padded.push(null);
@@ -52,21 +63,49 @@ export default function EvolutionArea({ slots, selectedHandId, selectedFieldId, 
   return (
     <div className={`evolution-area ${isActive ? 'evolution-area--active' : ''}`}>
       <div className="evolution-area__label">Evolution</div>
-      <p className="evolution-area__hint">Placing a card in a slot costs its play cost in evolution points.</p>
+      <p className="evolution-area__hint">
+        Placing a card in a slot costs its play cost in evolution points. Returning a card refunds that cost (you
+        did not evolve). Field cards can return to your hand or to the field.
+      </p>
       <div className="evolution-area__slots">
         {padded.slice(0, SLOT_COUNT).map((card, index) => (
           <div key={index} className="evolution-area__slot">
             {card ? (
               <>
                 <SlotCard card={card} />
-                <button
-                  type="button"
-                  className="evolution-area__return"
-                  onClick={() => onReturnToHand?.(index)}
-                  title="Return to hand"
-                >
-                  Return to hand
-                </button>
+                <div className="evolution-area__return-row">
+                  {isEconomyCard(card) && card._evolutionSource === EVOLUTION_SOURCE.ECONOMY ? (
+                    <button
+                      type="button"
+                      className="evolution-area__return"
+                      onClick={() => onReturnFromSlot?.(index, 'economy')}
+                      title="Refund evolution points and restore this economy card"
+                    >
+                      Return to economy
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        className="evolution-area__return"
+                        onClick={() => onReturnFromSlot?.(index, 'hand')}
+                        title="Refund evolution points and return this card to your hand"
+                      >
+                        Return to hand
+                      </button>
+                      {!isEconomyCard(card) && card._evolutionSource === EVOLUTION_SOURCE.FIELD && (
+                        <button
+                          type="button"
+                          className="evolution-area__return evolution-area__return--field"
+                          onClick={() => onReturnFromSlot?.(index, 'field')}
+                          title="Refund evolution points and return this card to your field"
+                        >
+                          Return to field
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
               </>
             ) : (
               <button

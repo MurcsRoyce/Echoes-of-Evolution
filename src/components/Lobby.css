@@ -74,6 +74,26 @@
   transform: translateY(-1px);
 }
 
+.lobby__logout-btn {
+  display: block;
+  width: 100%;
+  margin-top: 16px;
+  padding: 10px 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(200, 170, 170, 0.95);
+  background: rgba(45, 25, 28, 0.45);
+  border: 1px solid rgba(200, 120, 120, 0.4);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.lobby__logout-btn:hover {
+  background: rgba(70, 35, 38, 0.55);
+  border-color: rgba(220, 140, 140, 0.5);
+}
+
 .lobby__finding {
   margin-bottom: 16px;
 }

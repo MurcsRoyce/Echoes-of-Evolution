@@ -1,7 +1,8 @@
 /**
  * SCIENTIST — Full occupation design for Echoes of Evolution
  * Theme: Discover and prove. Research, experimentation, truth.
- * No portrait images yet.
+ * Portrait images: public/images/scientist/male/ and public/images/scientist/female/
+ * Naming: scientist_common_{m|w}.png, scientist_uncommon_{m|w}.png, scientist_rare_{m|w}.png
  */
 
 import { RARITY } from './doctor';
@@ -39,12 +40,84 @@ export const SCIENTIST_DESIGN = {
   quote: 'Scientists change what\'s possible.',
 
   baseCharacters: [
-    character('lab-assistant', 'Lab Assistant', RARITY.BASIC, 3, 3, 1, 1, 'Notebook', 'When this character enters play, draw 1 card.', null, null),
-    character('researcher', 'Researcher', RARITY.BASIC, 3, 1, 2, 1, 'Hypothesis', 'When you evolve, draw 1 card.', null, null),
-    character('postdoc', 'Postdoc', RARITY.ADVANCED, 3, 2, 3, 4, 'Experiment', 'Once per turn, you may discard 1 card to draw 1 card.', null, null),
-    character('principal-investigator', 'Principal Investigator', RARITY.ADVANCED, 3, 3, 3, 3, 'Grant', 'The first time you evolve each turn, it costs 1 less evolution point.', null, null),
-    character('professor', 'Professor', RARITY.RARE, 3, 5, 4, 7, 'Peer Review', 'When a character you control evolves, draw 2 cards.', null, null),
-    character('nobel-laureate', 'Nobel Laureate', RARITY.RARE, 3, 7, 5, 7, 'Breakthrough', 'When this character enters play or evolves, draw 3 cards.', null, null),
+    character(
+      'lab-assistant',
+      'Lab Assistant',
+      RARITY.BASIC,
+      3,
+      3,
+      1,
+      1,
+      'Notebook',
+      'When this character enters play, draw 1 card.',
+      null,
+      '/images/scientist/male/scientist_common_m.png'
+    ),
+    character(
+      'researcher',
+      'Researcher',
+      RARITY.BASIC,
+      3,
+      1,
+      2,
+      1,
+      'Hypothesis',
+      'When you evolve, draw 1 card.',
+      null,
+      '/images/scientist/female/scientist_common_w.png'
+    ),
+    character(
+      'postdoc',
+      'Postdoc',
+      RARITY.ADVANCED,
+      3,
+      2,
+      3,
+      4,
+      'Experiment',
+      'Once per turn, you may discard 1 card to draw 1 card.',
+      null,
+      '/images/scientist/male/scientist_uncommon_m.png'
+    ),
+    character(
+      'principal-investigator',
+      'Principal Investigator',
+      RARITY.ADVANCED,
+      3,
+      3,
+      3,
+      3,
+      'Grant',
+      'The first time you evolve each turn, it costs 1 less evolution point.',
+      null,
+      '/images/scientist/female/scientist_uncommon_w.png'
+    ),
+    character(
+      'professor',
+      'Professor',
+      RARITY.RARE,
+      3,
+      5,
+      4,
+      7,
+      'Peer Review',
+      'When a character you control evolves, draw 2 cards.',
+      null,
+      '/images/scientist/male/scientist_rare_m.png'
+    ),
+    character(
+      'nobel-laureate',
+      'Nobel Laureate',
+      RARITY.RARE,
+      3,
+      7,
+      5,
+      7,
+      'Breakthrough',
+      'When this character enters play or evolves, draw 3 cards.',
+      null,
+      '/images/scientist/female/scientist_rare_w.png'
+    ),
   ],
 };
 

@@ -104,7 +104,7 @@ function computeEvolvedPlayCostFromTargetAndBurn(targetCard, burnCard) {
   return Math.max(1, addBurn ? targetCost + burnCost : targetCost - burnCost);
 }
 
-const DECK_SIZE = 40;
+const DECK_SIZE = 50;
 const TEST_OPPONENT_FIELD_SIZE = 4;
 const MAX_PLAYER_HAND = 8;
 /** Worker — Legacy: draw when this card is Target or Burn and you complete evolution. */
@@ -176,16 +176,28 @@ function buildStarterDeck() {
     });
   });
 
-  /** All economy cards are always in the deck; remaining slots are random occupations. */
-  const economyCount = Math.min(ECONOMY_CARDS.length, DECK_SIZE);
-  const occCount = DECK_SIZE - economyCount;
-  const economyPart = ECONOMY_CARDS.slice(0, economyCount).map((card) => ({
+  /** Exactly one of each economy card, then random occupation cards to reach DECK_SIZE. */
+  const economyPart = ECONOMY_CARDS.map((card) => ({
     ...card,
     instanceId: `${card.id}-${idSeq++}`,
   }));
-
+  const econCount = economyPart.length;
+  if (econCount >= DECK_SIZE) {
+    return shuffle(economyPart.slice(0, DECK_SIZE));
+  }
+  const occCount = DECK_SIZE - econCount;
   const shuffledOcc = shuffle(occupationPool);
-  return shuffle([...shuffledOcc.slice(0, occCount), ...economyPart]);
+  let occCards;
+  if (shuffledOcc.length >= occCount) {
+    occCards = shuffledOcc.slice(0, occCount);
+  } else {
+    occCards = [];
+    for (let i = 0; i < occCount; i++) {
+      const src = shuffledOcc[i % shuffledOcc.length];
+      occCards.push({ ...src, instanceId: `${src.id}-${idSeq++}` });
+    }
+  }
+  return shuffle([...occCards, ...economyPart]);
 }
 
 

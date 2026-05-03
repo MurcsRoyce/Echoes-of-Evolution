@@ -67,8 +67,11 @@
 }
 
 .economy-area__card-wrap--selected {
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.85);
   border-radius: 10px;
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.9),
+    0 0 18px rgba(255, 255, 255, 0.45),
+    0 0 36px rgba(255, 255, 255, 0.2);
 }
 
 /* Empty slot: same footprint as compact economy card; white frame to match economy cards */

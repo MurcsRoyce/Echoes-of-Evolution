@@ -2393,15 +2393,16 @@ export default function App() {
                 >
                   Start turn (+2)
                 </button>
-                <button
-                  type="button"
-                  className="app__end-turn-btn"
-                  onClick={endTurn}
-                  disabled={!canAct}
-                  title="End your turn so the other player can take theirs"
-                >
-                  End turn
-                </button>
+                {canAct && (
+                  <button
+                    type="button"
+                    className="app__end-turn-btn"
+                    onClick={endTurn}
+                    title="End your turn so the other player can take theirs"
+                  >
+                    End turn
+                  </button>
+                )}
               </>
             ) : (
               <div className="app__turn-message">

@@ -789,12 +789,13 @@
 }
 
 .app__start-turn-btn:hover:not(:disabled),
-.app__end-turn-btn:hover {
+.app__end-turn-btn:hover:not(:disabled) {
   background: var(--app-btn-bg-hover);
   border-color: var(--app-accent-border-hover);
 }
 
-.app__start-turn-btn:disabled {
+.app__start-turn-btn:disabled,
+.app__end-turn-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

@@ -10,7 +10,7 @@ function artSrc(path) {
   return `${baseNorm}/${encoded}`;
 }
 
-export default function EconomyCard({ card, compact, showCost = true }) {
+export default function EconomyCard({ card, compact, showCost = true, rootClassName = '' }) {
   const [artError, setArtError] = useState(false);
   useEffect(() => {
     setArtError(false);
@@ -22,7 +22,11 @@ export default function EconomyCard({ card, compact, showCost = true }) {
   const src = art ? artSrc(art) : '';
 
   return (
-    <div className={`economy-card ${compact ? 'economy-card--compact' : ''}`}>
+    <div
+      className={['economy-card', rootClassName, compact ? 'economy-card--compact' : '']
+        .filter(Boolean)
+        .join(' ')}
+    >
       {showCost && (
         <span className="economy-card__cost" title="Evolution cost">
           <span className="economy-card__cost-diamond" aria-hidden>◆</span>

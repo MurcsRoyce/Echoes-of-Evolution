@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { TIERS, CARD_LIBRARY } from '../data/cards';
 import { ECONOMY_CARDS, isEconomyCard } from '../data/economyCards';
+import { RACE_CARDS } from '../data/raceCards';
 import { fetchCards } from '../lib/cardsDb';
 import { getColorHex, getTierColorHex } from '../data/colors';
 import './CardSetPanel.css';
@@ -33,6 +34,7 @@ export default function CardSetPanel({ onCardClick }) {
     () => [
       ...occupationCards.map((card) => ({ kind: 'occupation', card })),
       ...ECONOMY_CARDS.map((card) => ({ kind: 'economy', card })),
+      ...RACE_CARDS.map((card) => ({ kind: 'race', card })),
     ],
     [occupationCards]
   );
@@ -90,12 +92,17 @@ export default function CardSetPanel({ onCardClick }) {
           const tierLabel =
             kind === 'economy'
               ? `Economy · ◆${card.playCost}`
-              : TIERS[card.tier] ?? (card.tier != null ? `Tier ${card.tier}` : '—');
-          const flavor = kind === 'economy' ? card.effect : card.flavor;
+              : kind === 'race'
+                ? `Race · ◆${card.playCost ?? 0} · preview`
+                : TIERS[card.tier] ?? (card.tier != null ? `Tier ${card.tier}` : '—');
+          const flavor =
+            kind === 'economy' || kind === 'race' ? card.effect : card.flavor;
           const nameColor =
             kind === 'economy'
               ? '#7cb342'
-              : getBaseTierColor(card.tier) ?? '#e8e0c8';
+              : kind === 'race'
+                ? '#c9b8ff'
+                : getBaseTierColor(card.tier) ?? '#e8e0c8';
           return (
             <li
               key={`${kind}-${card.id}`}
@@ -113,9 +120,19 @@ export default function CardSetPanel({ onCardClick }) {
                       ? getBaseTierColor(card.tier)
                       : kind === 'economy'
                         ? 'linear-gradient(135deg, #2d4a3e 0%, #1a2e28 100%)'
-                        : 'transparent',
+                        : kind === 'race'
+                          ? 'linear-gradient(135deg, #4a3568 0%, #2a1c3e 100%)'
+                          : 'transparent',
                 }}
-                title={kind === 'occupation' ? `Tier ${card.tier ?? 1}` : 'Economy'}
+                title={
+                  kind === 'occupation'
+                    ? `Tier ${card.tier ?? 1}`
+                    : kind === 'economy'
+                      ? 'Economy'
+                      : kind === 'race'
+                        ? 'Race (preview — not in play yet)'
+                        : ''
+                }
               />
               <span className="card-set-panel__name" style={{ color: nameColor }}>{card.name}</span>
               <span className="card-set-panel__tier">{tierLabel}</span>

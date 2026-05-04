@@ -101,3 +101,25 @@
   font-size: 0.65rem;
   -webkit-line-clamp: 4;
 }
+
+/* Race browse cards (card set / modal only until field rules ship) */
+.economy-card--race {
+  border-color: rgba(190, 165, 255, 0.85);
+  background: linear-gradient(180deg, #241c34 0%, #100a18 100%);
+}
+
+.economy-card--race .economy-card__footer {
+  border-top-color: rgba(190, 165, 255, 0.35);
+}
+
+.economy-card--race .economy-card__name {
+  color: #e2d8ff;
+}
+
+.economy-card--race .economy-card__effect {
+  color: rgba(220, 210, 255, 0.92);
+}
+
+.economy-card--race .economy-card__art {
+  background-color: rgba(40, 28, 58, 0.95);
+}

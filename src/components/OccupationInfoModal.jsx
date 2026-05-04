@@ -2,8 +2,10 @@ import { useEffect } from 'react';
 import { getOccupationDesign } from '../data/occupations';
 import { CARD_LIBRARY, TIERS } from '../data/cards';
 import { getEconomyCardById } from '../data/economyCards';
+import { getRaceCardById } from '../data/raceCards';
 import OccupationDesignSheet from './OccupationDesignSheet';
 import EconomyCard from './EconomyCard';
+import RaceCard from './RaceCard';
 import './OccupationInfoModal.css';
 
 export default function OccupationInfoModal({ isOpen, onClose, occupationId }) {
@@ -23,11 +25,16 @@ export default function OccupationInfoModal({ isOpen, onClose, occupationId }) {
 
   if (!isOpen) return null;
 
-  const economyCard = occupationId ? getEconomyCardById(occupationId) : null;
-  const design = occupationId && !economyCard ? getOccupationDesign(occupationId) : null;
-  const card = occupationId && !economyCard ? CARD_LIBRARY.find((c) => c.id === occupationId) : null;
+  const raceCard = occupationId ? getRaceCardById(occupationId) : null;
+  const economyCard = occupationId && !raceCard ? getEconomyCardById(occupationId) : null;
+  const design =
+    occupationId && !economyCard && !raceCard ? getOccupationDesign(occupationId) : null;
+  const card =
+    occupationId && !economyCard && !raceCard
+      ? CARD_LIBRARY.find((c) => c.id === occupationId)
+      : null;
   const dialogLabel =
-    economyCard?.name ?? design?.name ?? card?.name ?? 'Card info';
+    raceCard?.name ?? economyCard?.name ?? design?.name ?? card?.name ?? 'Card info';
 
   return (
     <div
@@ -50,7 +57,17 @@ export default function OccupationInfoModal({ isOpen, onClose, occupationId }) {
           ×
         </button>
         <div className="occupation-modal__content">
-          {economyCard ? (
+          {raceCard ? (
+            <div className="occupation-modal__economy">
+              <RaceCard card={raceCard} />
+              {raceCard.designRole && (
+                <p className="occupation-modal__economy-role">{raceCard.designRole}</p>
+              )}
+              <p className="occupation-modal__economy-role" style={{ marginTop: 8, opacity: 0.85 }}>
+                Race field slot and in-match rules are not enabled yet — browse only.
+              </p>
+            </div>
+          ) : economyCard ? (
             <div className="occupation-modal__economy">
               <EconomyCard card={economyCard} />
               {economyCard.designRole && (

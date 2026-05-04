@@ -19,6 +19,7 @@ import CardSetDropdown from './components/CardSetDropdown';
 import OccupationInfoModal from './components/OccupationInfoModal';
 import EvolutionArea from './components/EvolutionArea';
 import EconomyArea from './components/EconomyArea';
+import RaceArea from './components/RaceArea';
 import BoardDeckPile from './components/BoardDeckPile';
 import ChatPanel from './components/ChatPanel';
 import MatchPlayersOnline from './components/MatchPlayersOnline';
@@ -217,6 +218,7 @@ export default function App() {
   const [hand, setHand] = useState([]);
   const [field, setField] = useState([]);
   const [economyField, setEconomyField] = useState([]);
+  const [raceField, setRaceField] = useState([]);
   const [evolutionSlots, setEvolutionSlots] = useState([null, null]);
   const [selectedHandId, setSelectedHandId] = useState(null);
   const [selectedFieldId, setSelectedFieldId] = useState(null);
@@ -272,6 +274,7 @@ export default function App() {
   const [localOpponentShield, setLocalOpponentShield] = useState(0);
   const [localOpponentEvolutionPoints, setLocalOpponentEvolutionPoints] = useState(STARTING_EVOLUTION_POINTS);
   const [localOpponentEconomyField, setLocalOpponentEconomyField] = useState([]);
+  const [localOpponentRaceField, setLocalOpponentRaceField] = useState([]);
   const [localOpponentUsedHealthcareThisTurn, setLocalOpponentUsedHealthcareThisTurn] = useState(false);
   const [localGameOver, setLocalGameOver] = useState(null);
   const [gameOverOverlayDismissed, setGameOverOverlayDismissed] = useState(false);
@@ -308,6 +311,11 @@ export default function App() {
   const opponentEconomy = (isSyncedMatch && opponent && Array.isArray(opponent.economyField))
     ? opponent.economyField
     : localOpponentEconomyField;
+  const opponentRace = (isSyncedMatch && opponent && Array.isArray(opponent.raceField))
+    ? opponent.raceField
+    : isLocalPracticeMatch(matchId)
+      ? localOpponentRaceField
+      : [];
   const displayHealth = isSyncedMatch && me ? me.health : health;
   const displayShield = isSyncedMatch && me ? (me.shield ?? 0) : playerShield;
   const displayEp = isSyncedMatch && me ? me.evolutionPoints : evolutionPoints;
@@ -496,6 +504,7 @@ export default function App() {
       setField(Array.isArray(saved.field) ? saved.field : []);
       setEvolutionSlots(Array.isArray(saved.evolutionSlots) && saved.evolutionSlots.length === 2 ? saved.evolutionSlots : [null, null]);
       setEconomyField(Array.isArray(saved.economyField) ? saved.economyField : []);
+      setRaceField(Array.isArray(saved.raceField) ? saved.raceField : []);
       setFirstTurnDrawDone(Boolean(saved.firstTurnDrawDone));
       setPlayerHasDrawnThisTurn(Boolean(saved.playerHasDrawnThisTurn));
       setPlayerHasStartedTurn(Boolean(saved.playerHasStartedTurn));
@@ -506,6 +515,7 @@ export default function App() {
       setField([]);
       setEvolutionSlots([null, null]);
       setEconomyField([]);
+      setRaceField([]);
       setFirstTurnDrawDone(false);
       setPlayerHasDrawnThisTurn(false);
       setPlayerHasStartedTurn(false);
@@ -525,21 +535,37 @@ export default function App() {
       field,
       evolutionSlots,
       economyField,
+      raceField,
       firstTurnDrawDone,
       playerHasDrawnThisTurn,
       playerHasStartedTurn,
     });
-  }, [isSyncedMatch, matchId, playerSlot, deck, hand, field, evolutionSlots, economyField, firstTurnDrawDone, playerHasDrawnThisTurn, playerHasStartedTurn]);
+  }, [
+    isSyncedMatch,
+    matchId,
+    playerSlot,
+    deck,
+    hand,
+    field,
+    evolutionSlots,
+    economyField,
+    raceField,
+    firstTurnDrawDone,
+    playerHasDrawnThisTurn,
+    playerHasStartedTurn,
+  ]);
 
-  // Push our field and economy to shared state (merge with latest server row so we never wipe opponent updates).
-  const lastSyncedFieldEconomyRef = useRef({ field: null, economyField: null });
+  // Push our field, economy, and race row to shared state (merge with latest server row so we never wipe opponent updates).
+  const lastSyncedBoardSideRef = useRef({ field: null, economyField: null, raceField: null });
   useEffect(() => {
     if (!isSyncedMatch || !matchId || !playerSlot) return;
     const fieldJson = JSON.stringify(field);
     const economyJson = JSON.stringify(economyField);
+    const raceJson = JSON.stringify(raceField);
     if (
-      lastSyncedFieldEconomyRef.current.field === fieldJson &&
-      lastSyncedFieldEconomyRef.current.economyField === economyJson
+      lastSyncedBoardSideRef.current.field === fieldJson &&
+      lastSyncedBoardSideRef.current.economyField === economyJson &&
+      lastSyncedBoardSideRef.current.raceField === raceJson
     ) return;
 
     let cancelled = false;
@@ -550,17 +576,18 @@ export default function App() {
         ...next[myKey],
         field: Array.isArray(field) ? JSON.parse(fieldJson) : [],
         economyField: Array.isArray(economyField) ? JSON.parse(economyJson) : [],
+        raceField: Array.isArray(raceField) ? JSON.parse(raceJson) : [],
       };
       return next;
     }).then((merged) => {
       if (cancelled || !merged) return;
-      lastSyncedFieldEconomyRef.current = { field: fieldJson, economyField: economyJson };
+      lastSyncedBoardSideRef.current = { field: fieldJson, economyField: economyJson, raceField: raceJson };
       setMetaState(merged);
     });
     return () => {
       cancelled = true;
     };
-  }, [isSyncedMatch, matchId, playerSlot, field, economyField]);
+  }, [isSyncedMatch, matchId, playerSlot, field, economyField, raceField]);
 
   useEffect(() => {
     if (!reconnectedJustNow) return;
@@ -638,6 +665,7 @@ export default function App() {
     setHand([]);
     setField([]);
     setEconomyField([]);
+    setRaceField([]);
     setEvolutionSlots([null, null]);
     setSelectedHandId(null);
     setSelectedFieldId(null);
@@ -666,6 +694,7 @@ export default function App() {
     setLocalOpponentShield(0);
     setLocalOpponentEvolutionPoints(STARTING_EVOLUTION_POINTS);
     setLocalOpponentEconomyField([]);
+    setLocalOpponentRaceField([]);
     setLocalOpponentUsedHealthcareThisTurn(false);
     setLocalGameOver(null);
     setTutorialOpponentActing(false);
@@ -863,6 +892,7 @@ export default function App() {
     setLocalOpponentShield(0);
     setLocalOpponentEvolutionPoints(STARTING_EVOLUTION_POINTS);
     setLocalOpponentEconomyField([]);
+    setLocalOpponentRaceField([]);
     setLocalOpponentUsedHealthcareThisTurn(false);
     setLocalGameOver(null);
     setTutorialOpponentDeck([]);
@@ -2159,6 +2189,7 @@ export default function App() {
             <div className="app__board-row app__board-row--opponent">
               <div className="app__board-side-column">
                 <BoardDeckPile label="Opponent deck" count={opponentBoardDeckCount} />
+                <RaceArea cards={opponentRace} label="Opponent race" showHint={false} />
                 <EconomyArea
                   cards={opponentEconomy}
                   selectedId={null}
@@ -2268,6 +2299,7 @@ export default function App() {
                     {firstTurnDrawDone ? 'Draw' : 'Draw 4'}
                   </button>
                 </div>
+                <RaceArea cards={raceField} label="Race" showHint={false} />
                 <EconomyArea
                   cards={economyField}
                   selectedId={selectedEconomyId}

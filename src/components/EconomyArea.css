@@ -91,3 +91,22 @@
   font-size: 0.85rem;
   color: rgba(255, 255, 255, 0.88);
 }
+
+/* Race column (reuses economy-area layout) */
+.economy-area--race-column .economy-area__label {
+  color: rgba(210, 195, 255, 0.95);
+}
+
+.economy-area--race-column .economy-area__hint {
+  color: rgba(190, 180, 220, 0.7);
+}
+
+.economy-area__empty--race {
+  border-style: dashed;
+  border-color: rgba(190, 165, 255, 0.55);
+  background: rgba(36, 28, 52, 0.45);
+}
+
+.economy-area__empty--race .economy-area__empty-text {
+  color: rgba(220, 205, 255, 0.88);
+}

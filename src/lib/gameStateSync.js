@@ -1,6 +1,6 @@
 /**
  * Sync shared game meta: turn, health, EP, gameOver, and each player's field and economy.
- * Hand/deck stay local; field and economyField are synced so both players see opponent's board.
+ * Hand/deck stay local; field, economyField, and raceField are synced so both players see the board.
  */
 
 import { supabase } from './supabaseClient';
@@ -18,6 +18,7 @@ export function createInitialGameState() {
       evolutionPoints: INITIAL_EP,
       field: [],
       economyField: [],
+      raceField: [],
       usedEmergencyHealthcareActThisTurn: false,
     },
     player2: {
@@ -26,6 +27,7 @@ export function createInitialGameState() {
       evolutionPoints: INITIAL_EP,
       field: [],
       economyField: [],
+      raceField: [],
       usedEmergencyHealthcareActThisTurn: false,
     },
   };

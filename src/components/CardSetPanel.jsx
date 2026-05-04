@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { TIERS, CARD_LIBRARY } from '../data/cards';
 import { ECONOMY_CARDS, isEconomyCard } from '../data/economyCards';
+import { isRaceCard } from '../data/raceCards';
 import { RACE_CARDS } from '../data/raceCards';
 import { fetchCards } from '../lib/cardsDb';
 import { getColorHex, getTierColorHex } from '../data/colors';
@@ -18,7 +19,7 @@ export default function CardSetPanel({ onCardClick }) {
   const occupationCards = useMemo(() => {
     const source = cards.length > 0 ? cards : CARD_LIBRARY;
     return source
-      .filter((c) => !isEconomyCard({ id: c.id }))
+      .filter((c) => !isEconomyCard({ id: c.id }) && !isRaceCard({ id: c.id }))
       .map((c) => {
         const base = baseLibraryById[c.id];
         // Keep server extras, but force canonical local tier/flavor for known occupations.

@@ -1,7 +1,9 @@
 import Card from './Card';
 import CharacterCard from './CharacterCard';
 import EconomyCard from './EconomyCard';
+import RaceCard from './RaceCard';
 import { isEconomyCard } from '../data/economyCards';
+import { isRaceCard } from '../data/raceCards';
 import { getCharacterFromCard } from '../lib/abilities';
 import { isEvolvedCollectionCard } from '../lib/evolvedCollection';
 import './Hand.css';
@@ -32,6 +34,27 @@ export default function Hand({ cards, selectedId, onSelectCard, onSaveEvolvedCar
                 onKeyDown={(e) => !disabled && e.key === 'Enter' && onSelectCard?.(card)}
               >
                 <EconomyCard card={card} showCost />
+              </div>
+            );
+          }
+
+          if (isRaceCard(card)) {
+            return (
+              <div
+                key={key}
+                className={`hand__card-wrap ${isSelected ? 'hand__card-wrap--selected' : ''}`}
+                onClick={() => !disabled && onSelectCard?.(card)}
+                onContextMenu={(e) => {
+                  if (!onSaveEvolvedCard || !isEvolvedCollectionCard(card)) return;
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onSaveEvolvedCard(card, { clientX: e.clientX, clientY: e.clientY });
+                }}
+                role="button"
+                tabIndex={disabled ? -1 : 0}
+                onKeyDown={(e) => !disabled && e.key === 'Enter' && onSelectCard?.(card)}
+              >
+                <RaceCard card={card} showCost />
               </div>
             );
           }

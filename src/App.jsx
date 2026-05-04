@@ -6,6 +6,7 @@ import {
   REACTIVE_SHIELD_MANDATE_ID,
   REACTIVE_SHIELD_AMOUNT,
 } from './data/economyCards';
+import { RACE_CARDS, isRaceCard } from './data/raceCards';
 import { getTierColorId, getTierFromColorId } from './data/colors';
 import { ALL_OCCUPATION_DESIGNS } from './data/occupations';
 import Deck from './components/Deck';
@@ -177,16 +178,22 @@ function buildStarterDeck() {
     });
   });
 
-  /** Exactly one of each economy card, then random occupation cards to reach DECK_SIZE. */
+  /** One of each economy card, one of each race card, then random occupation cards to reach DECK_SIZE. */
   const economyPart = ECONOMY_CARDS.map((card) => ({
     ...card,
     instanceId: `${card.id}-${idSeq++}`,
   }));
+  const racePart = RACE_CARDS.map((card) => ({
+    ...card,
+    instanceId: `${card.id}-${idSeq++}`,
+  }));
   const econCount = economyPart.length;
-  if (econCount >= DECK_SIZE) {
-    return shuffle(economyPart.slice(0, DECK_SIZE));
+  const raceCount = racePart.length;
+  const reserved = econCount + raceCount;
+  if (reserved >= DECK_SIZE) {
+    return shuffle([...economyPart, ...racePart].slice(0, DECK_SIZE));
   }
-  const occCount = DECK_SIZE - econCount;
+  const occCount = DECK_SIZE - reserved;
   const shuffledOcc = shuffle(occupationPool);
   let occCards;
   if (shuffledOcc.length >= occCount) {
@@ -198,7 +205,7 @@ function buildStarterDeck() {
       occCards.push({ ...src, instanceId: `${src.id}-${idSeq++}` });
     }
   }
-  return shuffle([...occCards, ...economyPart]);
+  return shuffle([...occCards, ...economyPart, ...racePart]);
 }
 
 
@@ -791,6 +798,7 @@ export default function App() {
         let oppEconomy = [...tutorialOppEconomyRef.current];
         const oppHasMilitaryFunding = oppEconomy.some((c) => c.id === 'military-funding-program');
         const playable = oppHand.filter((c) => {
+          if (isRaceCard(c)) return false;
           let cost = c.playCost ?? 1;
           if (!isEconomyCard(c) && oppHasMilitaryFunding) {
             cost = Math.max(0, cost - 1);
@@ -801,12 +809,12 @@ export default function App() {
         });
         const econCandidate = playable.find((c) => isEconomyCard(c));
         const charCandidate = playable
-          .filter((c) => !isEconomyCard(c))
+          .filter((c) => !isEconomyCard(c) && !isRaceCard(c))
           .sort((a, b) => (b.playCost ?? 0) - (a.playCost ?? 0))[0];
         const chosen = econCandidate ?? charCandidate;
         if (chosen) {
           let pay = chosen.playCost ?? 1;
-          if (!isEconomyCard(chosen) && oppHasMilitaryFunding) {
+          if (!isEconomyCard(chosen) && !isRaceCard(chosen) && oppHasMilitaryFunding) {
             pay = Math.max(0, pay - 1);
           }
           ep -= pay;
@@ -1076,13 +1084,13 @@ export default function App() {
     if (!selectedHandId) return;
     const card = hand.find((c) => (c.instanceId || c.id) === selectedHandId);
     if (!card) return;
-    if (!isEconomyCard(card) && field.length >= 4) {
+    if (!isEconomyCard(card) && !isRaceCard(card) && field.length >= 4) {
       setAttackToast({ message: 'Field is full (max 4 characters).', key: Date.now() });
       return;
     }
     let cost = card.playCost ?? 1;
     const hasMilitaryFunding = economyField.some((c) => c.id === 'military-funding-program');
-    if (!isEconomyCard(card) && hasMilitaryFunding && !firstCharacterPlayedFromHandThisTurn) {
+    if (!isEconomyCard(card) && !isRaceCard(card) && hasMilitaryFunding && !firstCharacterPlayedFromHandThisTurn) {
       cost = Math.max(0, cost - 1);
     }
     const currentEp = isSyncedMatch && me ? me.evolutionPoints : evolutionPoints;
@@ -1096,6 +1104,8 @@ export default function App() {
 
     if (isEconomyCard(card)) {
       setEconomyField([cardToPlay]);
+    } else if (isRaceCard(card)) {
+      setRaceField([cardToPlay]);
     } else {
       setFirstCharacterPlayedFromHandThisTurn(true);
       const nextField = [...field, cardToPlay];
@@ -1147,7 +1157,9 @@ export default function App() {
       applyAbilityState({ ep: 1 });
       refundMessages.push('Industrial Automation: Refunded +1 Evolution.');
     }
-    const hasGuildMaster = field.some((c) => c.id === 'guild-master') || (!isEconomyCard(card) && card.id === 'guild-master');
+    const hasGuildMaster =
+      field.some((c) => c.id === 'guild-master') ||
+      (!isEconomyCard(card) && !isRaceCard(card) && card.id === 'guild-master');
     if (hasGuildMaster) {
       applyAbilityState({ ep: 1 });
       refundMessages.push('Guild Master: Refunded +1 Evolution.');
@@ -1313,7 +1325,8 @@ export default function App() {
         ? economyField.find((c) => (c.instanceId || c.id) === selectedEconomyId)
         : field.find((c) => (c.instanceId || c.id) === selectedFieldId);
     if (!card) return;
-    
+    if (isRaceCard(card)) return;
+
     const otherSlotIndex = 1 - slotIndex;
     const other = evolutionSlots[otherSlotIndex];
     if (other != null) {
@@ -1459,13 +1472,26 @@ export default function App() {
   const rawPlayCost = selectedCard?.playCost ?? 1;
   const hasMilitaryFundingProgram = economyField.some((c) => c.id === 'military-funding-program');
   const militaryFundingDiscountsSelectedHandCharacter =
-    Boolean(selectedHandId && selectedCard && !isEconomyCard(selectedCard) && hasMilitaryFundingProgram && !firstCharacterPlayedFromHandThisTurn);
+    Boolean(
+      selectedHandId &&
+        selectedCard &&
+        !isEconomyCard(selectedCard) &&
+        !isRaceCard(selectedCard) &&
+        hasMilitaryFundingProgram &&
+        !firstCharacterPlayedFromHandThisTurn
+    );
   const playCost = militaryFundingDiscountsSelectedHandCharacter ? Math.max(0, rawPlayCost - 1) : rawPlayCost;
   const epForCost = isSyncedMatch && me ? me.evolutionPoints : evolutionPoints;
   const canAffordPlay = epForCost >= playCost;
   const fieldFull = field.length >= 4;
   const canPlayCharacterToField = !fieldFull;
-  const canPlayCard = selectedHandId && canAffordPlay && (selectedCard && isEconomyCard(selectedCard) ? true : canPlayCharacterToField);
+  const canPlayEconomyOrRaceSlot = Boolean(
+    selectedCard && (isEconomyCard(selectedCard) || isRaceCard(selectedCard))
+  );
+  const canPlayCard =
+    selectedHandId &&
+    canAffordPlay &&
+    (canPlayEconomyOrRaceSlot ? true : canPlayCharacterToField);
 
   const selectedCardManualAbilityInfo = selectedFieldId 
     ? getManualAbilityInfo(field.find((c) => (c.instanceId || c.id) === selectedFieldId)) 
@@ -2352,7 +2378,17 @@ export default function App() {
                   className="app__play-btn"
                   onClick={playFromHand}
                   disabled={!canAct || !canPlayCard || blackMarketSelecting}
-                  title={selectedHandId && !canAffordPlay ? `Need ${playCost} evolution points` : selectedHandId && !isEconomyCard(hand.find((c) => (c.instanceId || c.id) === selectedHandId)) && fieldFull ? 'Field is full (max 4 characters)' : undefined}
+                  title={
+                    selectedHandId && !canAffordPlay
+                      ? `Need ${playCost} evolution points`
+                      : selectedHandId &&
+                          (() => {
+                            const c = hand.find((x) => (x.instanceId || x.id) === selectedHandId);
+                            return c && !isEconomyCard(c) && !isRaceCard(c) && fieldFull;
+                          })()
+                        ? 'Field is full (max 4 characters)'
+                        : undefined
+                  }
                 >
                   Play selected card {selectedHandId ? `(${playCost})` : ''}
                 </button>

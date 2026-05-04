@@ -1,6 +1,6 @@
 /**
  * Race cards — faction identity (planned: max health, max EP, starting shield).
- * Not playable in matches yet: browse-only in the card set + info modal.
+ * Starter deck includes one of each; playing a race from hand replaces your race slot (like economy).
  */
 
 export const RACE_CARD_IDS = ['sintari', 'titan', 'zion'];
